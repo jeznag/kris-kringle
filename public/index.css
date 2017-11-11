@@ -1,0 +1,79 @@
+body, input, button {
+  font-family: monospace;
+}
+
+.node {
+  display: flex;
+  padding-left: 0;
+  padding-top: 3rem;
+}
+
+.node[data-child-num="0"]:not([data-depth="1"]) {
+  padding-left: 0;
+}
+
+.node[data-child-num="0"][data-depth="1"] {
+  padding-top: 0;
+}
+
+.input-wrapper {
+  border: 1px solid black;
+  height: 13rem;
+  padding: 1rem;
+  width: 9rem;
+}
+
+.input-wrapper[data-disabled="disabled"] {
+  height: 10rem;
+}
+
+.container {
+  margin-left: 2rem;
+  margin-top: 1rem;
+  padding-bottom: 3rem;
+}
+
+.input-group {
+  padding: .25rem 0;
+}
+
+.margin-top-md {
+  margin-top: 2rem;
+}
+
+.margin-top-xs {
+  margin-top: .5rem;
+}
+
+.margin-botton-sm {
+  margin-bottom: 1rem;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+th {
+  text-align: left;
+}
+
+td, th {
+  border: 1px solid black;
+  padding: 1rem;
+}
+
+.loading {
+  animation: 3s infinite alternate slidein;
+}
+
+@keyframes slidein {
+  from {
+    margin-left: 25%;
+    width: 300%;
+  }
+
+  to {
+    margin-left: 0%;
+    width: 100%;
+  }
+}

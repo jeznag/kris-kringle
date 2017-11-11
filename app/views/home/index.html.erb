@@ -1,0 +1,38 @@
+<h1>Welcome to the Kris Kringle Generator</h1>
+<p>
+  Is your extended family burgeoning out of control?
+  Do you lose hair every Christmas trying to figure out who should give a gift to whom?
+  Never fear, KKG is here!
+</p>
+<p>
+  KKG analyses your family tree and figures out optimal matches based on these rules:
+  <ul>
+    <li>
+      Kids shouldn't give to their parents
+    </li>
+    <li>
+      Siblings shouldn't give to each other
+    </li>
+    <li>
+      Partners shouldn't buy for each other
+    </li>
+    <li>
+      Recursive gift giving (i.e. Bob buys for Jane and Jane buys for Bob) is banned
+    </li>
+    <li>
+      You shouldn't have to buy for the same person two years in a row
+    </li>
+    <li>
+      Young people only have to give gifts to each other because they're poor
+    </li>
+    <li>
+      Adults have to buy for other adults and for children
+    </li>
+    <li>
+      Children don't have to buy for anyone because they have no money
+    </li>
+  </ul>
+
+  <h2>Sign Up</h2>
+  <%= render 'accounts/form', account: Account.new %>
+</p>

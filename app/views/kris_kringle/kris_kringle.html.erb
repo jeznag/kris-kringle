@@ -1,0 +1,34 @@
+<script>
+  window.accountID = '<%=@account_id%>';
+</script>
+<div class="container">
+  <h1>Results for <%=Date.today.strftime("%Y")%></h1>
+  <%- if (params.has_key?('admin')) %>
+    <h3>URL to share with other people: <%=kris_kringle_url(account_id: @account_id)%></h3>
+    <button id="generate-results">Generate Results</button>
+  <%- end %>
+  <label for="filter-results" />Find Yourself</label>
+  <input id="filter-results" />
+  <div id="results">
+    <div class="loading">
+      Loading...
+    </div>
+  </div>
+</div>
+<div class="container">
+  <h1>Family Tree</h1>
+  <%- if (params.has_key?('admin')) %>
+    <div class="input-group margin-botton-sm">
+      <button id="add-top-level-person">Add Person</button>
+    </div>
+  <%- end %>
+  <div id="tree" data-disabled="<%=!params.has_key?(:admin)%>">
+    <div class="loading">
+      Loading...
+    </div>
+  </div>
+</div>
+<link href="index.css" rel="stylesheet" />
+<script src="js/algorithm.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>

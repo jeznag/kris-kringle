@@ -1,0 +1,30 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @family_member.name %>
+</p>
+
+<p>
+  <strong>Partner:</strong>
+  <%= @family_member.partner %>
+</p>
+
+<p>
+  <strong>Family Member Type:</strong>
+  <%= @family_member.family_member_type %>
+</p>
+
+<p>
+  <strong>Parent:</strong>
+  <%= @family_member.parent.first&.name %>
+</p>
+
+<p>
+  <strong>Children:</strong>
+  <%= @family_member.children.pluck('name').join(', ') %>
+</p>
+
+<%= link_to 'New', new_family_member_path() %> |
+<%= link_to 'Edit', edit_family_member_path(@family_member) %> |
+<%= link_to 'Back', family_members_path %>

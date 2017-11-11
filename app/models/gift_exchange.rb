@@ -1,0 +1,2 @@
+class GiftExchange < ApplicationRecord
+end

@@ -1,0 +1,13 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Account name:</strong>
+  <%= @account.account_name %>
+</p>
+
+<p>
+  <strong>Your Unique Account ID (don't lose this):</strong>
+  <%= @account.account_id %>
+</p>
+
+<%= link_to 'Edit', edit_account_path(id: @account.account_id) %> |

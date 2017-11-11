@@ -1,0 +1,35 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Giver:</strong>
+  <%= @gift_exchange.giver.name %>
+</p>
+
+<p>
+  <strong>Receiver:</strong>
+  <%= @gift_exchange.receiver.name %>
+</p>
+
+<p>
+  <strong>Social distance:</strong>
+  <%= @gift_exchange.social_distance %>
+</p>
+
+<p>
+  <strong>Giver Type:</strong>
+  <%= @gift_exchange.giver_type %>
+</p>
+
+<p>
+  <strong>Receiver Type:</strong>
+  <%= @gift_exchange.receiver_type %>
+</p>
+
+<p>
+  <strong>Xmas Year:</strong>
+  <%= @gift_exchange.xmas_year %>
+</p>
+
+<%= link_to 'New', new_gift_exchange_path(@gift_exchange) %> |
+<%= link_to 'Edit', edit_gift_exchange_path(@gift_exchange) %> |
+<%= link_to 'Back', gift_exchanges_path %>
