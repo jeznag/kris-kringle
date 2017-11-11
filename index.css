@@ -1,0 +1,35 @@
+body, input, button {
+  font-family: monospace;
+}
+
+.node {
+  display: flex;
+  padding-left: 1rem;
+  padding-top: 1rem;
+}
+
+.node[data-child-num="0"]:not([data-depth="1"]) {
+  padding-left: 0;
+}
+
+.input-wrapper {
+  border: 1px solid black;
+  height: 9.5rem;
+  padding: 1rem;
+  width: 9rem;
+}
+
+.container {
+  margin-left: 2rem;
+  margin-top: 1rem;
+  padding-bottom: 3rem;
+}
+
+th {
+  text-align: left;
+}
+
+td, th {
+  border: 1px solid black;
+  padding: 1rem;
+}
