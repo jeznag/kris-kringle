@@ -277,6 +277,11 @@ function checkDistanceCalculation() {
       expectedDistance: 0
     },
     {
+      person1: "Jeremy Nagel",
+      person2: "Alice Nagel",
+      expectedDistance: 0
+    },
+    {
       person1: "Elena McGannon",
       person2: "Matt (Elena BF)",
       expectedDistance: 0
@@ -284,7 +289,17 @@ function checkDistanceCalculation() {
     {
       person1: "Claire McGannon",
       person2: "Matt (Elena BF)",
-      expectedDistance: 3
+      expectedDistance: 4
+    },
+    {
+      person1: "Claire McGannon",
+      person2: "Alice Nagel",
+      expectedDistance: 4
+    },
+    {
+      person1: "Matt (Elena BF)",
+      person2: "Alice Nagel",
+      expectedDistance: 9
     }
   ];
 
@@ -295,7 +310,7 @@ function checkDistanceCalculation() {
       testCase.person2
     );
     if (socialDistance !== testCase.expectedDistance) {
-      throw new Error("social distance fail!", testCase, socialDistance);
+      throw new Error("social distance fail!" + JSON.stringify(testCase) + 'Actual: ' + socialDistance);
     }
   });
 }

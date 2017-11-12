@@ -172,21 +172,27 @@ function socialDistance(tree, person1, person2) {
   }
 
   if (hasSharedParent(tree, person1, person2)) {
-    if (depthPerson1 === depthPerson2 && depthPerson1 === 1) {
+    if (depthPerson1 + depthPerson2 === 2) {
       // top level adults can buy for each other
       return 3;
     }
-    const person1Node = findNode(tree, person1);
-    const person2Node = findNode(tree, person2);
-    const areNotSiblings = (person1Node.partner === person1 && person2Node.name === person2) || (person1Node.name === person1 && person2Node.partner === person2);
 
-    if (areNotSiblings) {
-      return 3;
+    if (!areBloodRelatives(tree, person1, person2)) {
+      return 4;
     }
     return 0;
   }
 
-  return Math.pow(2 + Math.abs(depthPerson1 - depthPerson2), 2);
+  const baseDistance = areBloodRelatives(tree, person1, person2) ? 2 : 3;
+  return Math.pow(baseDistance + Math.abs(depthPerson1 - depthPerson2), 2);
+}
+
+function areBloodRelatives(tree, person1, person2) {
+  const person1Node = findNode(tree, person1);
+  const person2Node = findNode(tree, person2);
+  // the blood relative gets to be the "name" whereas relatives in law
+  // will be in the "partner" property
+  return (person1Node.name === person1 && person2Node.name === person2);
 }
 
 function getExchangeForGiver(exchanges, giverName) {

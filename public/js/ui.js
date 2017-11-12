@@ -67,7 +67,11 @@ function renderInputs(node, parentEl, indexInFamily) {
         </div>
         <div class="input-group">
           <label for="${node.name}-type">Type</label>
-          <input ${inputsDisabled} id="${node.name}-type" type="text" data-type="type" value="${node.type || ''}" />
+          <select ${inputsDisabled} id="${node.name}-type" type="text" data-type="type" value="${node.type || ''}">
+            <option ${node.type === 'kid' ? 'selected' : ''} value="kid">Kid</option>
+            <option ${node.type === 'young adult' ? 'selected' : ''} value="young adult">Young Adult</option>
+            <option ${node.type === 'old guard' ? 'selected' : ''} value="old guard">Old Guard</option>
+          </select>
         </div>
         ${buttons}
       </div>
@@ -255,6 +259,7 @@ async function displayEverything() {
   compiledTree = await api.fetchFamilyMemberData();
   const exchangeDataRaw = await fetchGiftExchangeData();
   mapPreviousGiftExchangeData(exchangeDataRaw);
+  clearTree();
   showFamilyTree();
   showResults();
   addResultsFiltering();

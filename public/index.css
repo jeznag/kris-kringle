@@ -41,3 +41,19 @@ td, th {
   border: 1px solid black;
   padding: 1rem;
 }
+
+.loading {
+  animation: 3s infinite alternate slidein;
+}
+
+@keyframes slidein {
+  from {
+    margin-left: 25%;
+    width: 300%;
+  }
+
+  to {
+    margin-left: 0%;
+    width: 100%;
+  }
+}
