@@ -8,10 +8,5 @@ Generates kris kringle matches based on the following business rules.
 Uses a very inefficient graph searching approach to find matches based on social distance.
 
 # TODO
-- multi tenancy
-- add top level people
-- fix adding children to children
-
-# Nice to do
 - Set up mailers
 - graph of gift giving

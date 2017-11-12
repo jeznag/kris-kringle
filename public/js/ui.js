@@ -65,7 +65,7 @@ function renderInputs(node, parentEl, indexInFamily) {
     <button data-action="remove" data-node-id="${node.ID}">Remove Person</button>` : '';
 
     newWrapperEl.innerHTML = `
-      <div class="input-wrapper">
+      <div class="input-wrapper" data-disabled="${inputsDisabled}">
         <div class="input-group">
           <label for="${node.name}">Name</label>
           <input ${inputsDisabled} id="${node.name}-name" data-type="name" type="text" value="${node.name || ''}" />
@@ -261,23 +261,28 @@ function addPerson(parentID) {
     parent: parentID || '',
     account_id: window.accountID,
   };
-  clearTree();
   showLoaderForTree();
   api.addPerson(newNodeData, getCSRF()).then((newPersonData) => {
+    clearTree();
     newNodeData.ID = newPersonData.id;
     algo.addChildToNode(compiledTree, parentID, newNodeData);
     removeLoaderForTree();
     showFamilyTree();
-    const newNode = document.querySelector(`#person-${newPersonData.id}-wrapper`);
-    newNode.scrollIntoView();
+
+    if (parentID === 'root') {
+      const newNode = document.querySelector(`#person-${newPersonData.id}-wrapper`);
+      newNode.scrollIntoView();
+    }
   });
 }
 
 function listenToAddTopLevelPerson() {
   const addTopLevelPersonButton = document.querySelector('#add-top-level-person');
-  addTopLevelPersonButton.addEventListener('click', (e) => {
-    addPerson('root');
-  });
+  if (addTopLevelPersonButton) {
+    addTopLevelPersonButton.addEventListener('click', (e) => {
+      addPerson('root');
+    });
+  }
 }
 
 let compiledTree;

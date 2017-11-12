@@ -1,4 +1,4 @@
-class HomeController < ApplicationController
+class KrisKringleController < ApplicationController
   def index
     render 'home/index'
   end
@@ -7,9 +7,9 @@ class HomeController < ApplicationController
     @account_id = params[:account_id]
     matching_account = Account.where(account_id: @account_id).first
     if (!@account_id || matching_account.nil?)
-      render 'home/no_account_id'
+      render 'kris_kringle/no_account_id'
     else
-      render 'home/kris_kringle'
+      render 'kris_kringle/kris_kringle'
     end
   end
 end
