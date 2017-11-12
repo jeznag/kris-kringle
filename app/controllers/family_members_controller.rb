@@ -6,7 +6,15 @@ class FamilyMembersController < ApplicationController
   # GET /family_members
   # GET /family_members.json
   def index
-    @family_members = FamilyMember.all
+    if (!params.has_key?('jezzaboss'))
+      if (params.has_key?('account_id'))
+        @family_members = FamilyMember.where(account_id: params[:account_id])
+      else
+        @family_members = []
+      end
+    else
+      @family_members = FamilyMember.all
+    end
   end
 
   # GET /family_members/1
@@ -66,7 +74,11 @@ class FamilyMembersController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_family_member
-      @family_member = FamilyMember.find(params[:id])
+      if (params.has_key?('jezzaboss'))
+        @family_member = FamilyMember.find(params[:id])
+      else
+        @family_member = FamilyMember.where("id='#{params[:id]}' AND account_id='#{params[:account_id]}'").first
+      end
     end
 
     def set_family_member_types
@@ -100,6 +112,6 @@ class FamilyMembersController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def family_member_params
       puts 'PARAMS!!!' + params.inspect
-      params.require(:family_member).permit(:name, :partner, :family_member_type, :parent_id)
+      params.require(:family_member).permit(:name, :partner, :family_member_type, :parent_id, :account_id)
     end
 end

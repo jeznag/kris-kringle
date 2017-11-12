@@ -7,7 +7,7 @@ async function updatePersonOnServer(nodeData, csrf) {
   delete updatedDataForServer.ID;
   delete updatedDataForServer.children;
 
-  const response = await fetch(`/family_members/${nodeData.ID}.json`, {
+  const response = await fetch(`/family_members/${nodeData.ID}.json?account_id=${window.accountID}`, {
     method: 'PATCH',
     credentials: 'include',
     body: JSON.stringify({
@@ -19,24 +19,25 @@ async function updatePersonOnServer(nodeData, csrf) {
 }
 
 async function fetchFamilyMemberData() {
-  const response = await fetch('/family_members.json');
+  const response = await fetch(`/family_members.json?account_id=${window.accountID}`);
   const jsonData = await response.json();
   return algo.compileTree(jsonData);
 }
 
 async function fetchGiftExchangeData() {
-  const response = await fetch('/gift_exchanges.json');
+  const response = await fetch(`/gift_exchanges.json?account_id=${window.accountID}`);
   const jsonData = await response.json();
   return jsonData;
 }
 
 async function addPerson(personData, csrf) {
+  debugger;
   const headers = new Headers();
   headers.append('X-CSRF-Token', csrf);
   headers.append('Content-Type', 'application/json');
   const personDataForServer = Object.assign({ parent_id: personData.parent }, personData);
   delete personDataForServer.parent;
-  const response = await fetch(`/family_members.json`, {
+  const response = await fetch(`/family_members.json?account_id=${window.accountID}`, {
     method: 'POST',
     credentials: 'include',
     body: JSON.stringify({
@@ -45,12 +46,13 @@ async function addPerson(personData, csrf) {
     headers,
   });
   const body = await response.json();
+  return body;
 }
 
 async function removePerson(personID, csrf) {
   const headers = new Headers();
   headers.append('X-CSRF-Token', csrf);
-  const response = await fetch(`/family_members/${personID}.json`, {
+  const response = await fetch(`/family_members/${personID}.json?account_id=${window.accountID}`, {
     method: 'DELETE',
     credentials: 'include',
     headers,
@@ -61,7 +63,7 @@ async function saveGiftExchanges(exchanges, csrf, xmasYear) {
   const headers = new Headers();
   headers.append('X-CSRF-Token', csrf);
   headers.append('Content-Type', 'application/json');
-  const response = await fetch(`/gift_exchanges.json`, {
+  const response = await fetch(`/gift_exchanges.json?account_id=${window.accountID}`, {
     method: 'POST',
     credentials: 'include',
     body: JSON.stringify({

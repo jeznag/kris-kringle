@@ -5,7 +5,15 @@ class GiftExchangesController < ApplicationController
   # GET /gift_exchanges
   # GET /gift_exchanges.json
   def index
-    @gift_exchanges = GiftExchange.all
+    if (!params.has_key?('jezzaboss'))
+      if (params.has_key?('account_id'))
+        @gift_exchanges = GiftExchange.where(account_id: params[:account_id])
+      else
+        @gift_exchanges = []
+      end
+    else
+      @gift_exchanges = GiftExchange.all
+    end
   end
 
   # GET /gift_exchanges/1
@@ -26,17 +34,15 @@ class GiftExchangesController < ApplicationController
   # POST /gift_exchanges.json
   def create
     gift_exchange_data = gift_exchange_params
-    puts gift_exchange_data.class
     if (gift_exchange_data[:xmas_year])
       xmas_year = gift_exchange_data[:xmas_year]
+      account_id = gift_exchange_data[:account_id]
       # replace existing exchange data for this year
-      # TODO - need to scope this to only the current account_id
-      GiftExchange.where(xmas_year: xmas_year).each do |old_exchange|
+      GiftExchange.where("xmas_year='#{xmas_year}' AND account_id='#{account_id}'").each do |old_exchange|
         old_exchange.destroy!
       end
       begin
         gift_exchange_data[:gift_exchanges].each do |gift_exchange_datum|
-          puts gift_exchange_datum.to_h.inspect
           GiftExchange.create!(gift_exchange_datum.to_h)
         end
       rescue => e
@@ -85,7 +91,11 @@ class GiftExchangesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_gift_exchange
-      @gift_exchange = GiftExchange.find(params[:id])
+      if (params.has_key?('jezzaboss'))
+        @gift_exchange = GiftExchange.find(params[:id])
+      else
+        @gift_exchange = GiftExchange.where("id='#{params[:id]}' AND account_id='#{params[:account_id]}'").first
+      end
     end
 
     def set_possible_givers_receivers
@@ -111,11 +121,11 @@ class GiftExchangesController < ApplicationController
     def gift_exchange_params
       if (params[:gift_exchanges])
         {
-          gift_exchanges: params[:gift_exchanges].map { |gift_exchange_data| gift_exchange_data.require(:gift_exchange).permit(:giver_name, :receiver_name, :social_distance, :giver_type, :receiver_type, :xmas_year)},
+          gift_exchanges: params[:gift_exchanges].map { |gift_exchange_data| gift_exchange_data.require(:gift_exchange).permit(:giver_name, :receiver_name, :social_distance, :giver_type, :receiver_type, :xmas_year, :account_id)},
           xmas_year: params.require(:xmas_year)
         }
       else
-        params.require(:gift_exchange).permit(:giver_name, :receiver_name, :social_distance, :giver_type, :receiver_type, :xmas_year)
+        params.require(:gift_exchange).permit(:giver_name, :receiver_name, :social_distance, :giver_type, :receiver_type, :xmas_year, :account_id)
       end
     end
 end

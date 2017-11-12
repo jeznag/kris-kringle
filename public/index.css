@@ -2,6 +2,10 @@ body, input, button {
   font-family: monospace;
 }
 
+#tree {
+  min-height: 500px;
+}
+
 .node {
   display: flex;
   padding-left: 0;

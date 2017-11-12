@@ -1,0 +1,6 @@
+<h1>Editing Account</h1>
+
+<%= render 'form', account: @account %>
+
+<%= link_to 'Show', account_path(id: @account.account_id) %> |
+<%= link_to 'Back', accounts_path() %>

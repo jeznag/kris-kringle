@@ -41,6 +41,15 @@ function clearTree() {
   containerEl.innerHTML = '';
 }
 
+function showLoaderForTree() {
+  const containerEl = document.querySelector('#tree');
+  containerEl.innerHTML = '<div class="loading">Loading...</div>' + containerEl.innerHTML;
+}
+
+function removeLoaderForTree() {
+  document.querySelectorAll('#tree .loading').forEach((loadingDiv) => loadingDiv.remove());
+}
+
 function renderInputs(node, parentEl, indexInFamily) {
   let newWrapperEl = parentEl;
   const containerEl = document.querySelector('#tree');
@@ -51,9 +60,9 @@ function renderInputs(node, parentEl, indexInFamily) {
     newWrapperEl.classList.add('node');
     newWrapperEl.setAttribute('data-child-num', indexInFamily);
     newWrapperEl.setAttribute('data-depth', depth);
-    newWrapperEl.id = `${node.name}-wrapper`;
+    newWrapperEl.id = `person-${node.ID}-wrapper`;
     const buttons = !inputsDisabled ? `<button data-action="add" data-node-id="${node.ID}">Add Child</button>
-    <button data-action="remove" data-node-id="${node.ID}">Remove Child</button>` : '';
+    <button data-action="remove" data-node-id="${node.ID}">Remove Person</button>` : '';
 
     newWrapperEl.innerHTML = `
       <div class="input-wrapper">
@@ -78,28 +87,19 @@ function renderInputs(node, parentEl, indexInFamily) {
     `;
 
     // todo - update tree when inputs change
-
     newWrapperEl.querySelectorAll('button').forEach((button) => {
       button.addEventListener('click', (e) => {
         const nodeID = e.target.getAttribute('data-node-id');
         const action = e.target.getAttribute('data-action');
 
         if (action === 'add') {
-          const newNodeData = {
-            name: '',
-            partner: '',
-            children: [],
-            parent: nodeID
-          };
-          algo.addChildToNode(compiledTree, nodeID, newNodeData);
-          api.addPerson(newNodeData, getCSRF())
+          addPerson(nodeID);
         } else if (action === 'remove') {
           algo.removeNode(compiledTree, nodeID);
           api.removePerson(nodeID, getCSRF())
+          clearTree();
+          showFamilyTree();
         }
-
-        clearTree();
-        showFamilyTree();
       });
     });
     newWrapperEl.querySelectorAll('input').forEach((input) => {
@@ -240,16 +240,43 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
 
 function addResultsFiltering() {
   const filterInput = document.querySelector('#filter-results');
-  filterInput.addEventListener('keypress', (e) => {
+  filterInput.addEventListener('keyup', (e) => {
     const resultsTableRows = document.querySelectorAll('#results tbody tr');
     resultsTableRows.forEach((tableRow) => {
       const containsPersonName = tableRow.querySelector(`[data-giver*="${filterInput.value.toLowerCase()}"], [data-receiver*="${filterInput.value.toLowerCase()}"]`);
-      if (containsPersonName) {
+      if (containsPersonName || !filterInput.value) {
         tableRow.style.display = 'table-row';
       } else {
         tableRow.style.display = 'none';
       }
     });
+  });
+}
+
+function addPerson(parentID) {
+  const newNodeData = {
+    name: '',
+    partner: '',
+    children: [],
+    parent: parentID || '',
+    account_id: window.accountID,
+  };
+  clearTree();
+  showLoaderForTree();
+  api.addPerson(newNodeData, getCSRF()).then((newPersonData) => {
+    newNodeData.ID = newPersonData.id;
+    algo.addChildToNode(compiledTree, parentID, newNodeData);
+    removeLoaderForTree();
+    showFamilyTree();
+    const newNode = document.querySelector(`#person-${newPersonData.id}-wrapper`);
+    newNode.scrollIntoView();
+  });
+}
+
+function listenToAddTopLevelPerson() {
+  const addTopLevelPersonButton = document.querySelector('#add-top-level-person');
+  addTopLevelPersonButton.addEventListener('click', (e) => {
+    addPerson('root');
   });
 }
 
@@ -264,6 +291,7 @@ async function displayEverything() {
   showResults();
   addResultsFiltering();
   addGenerateResultsListener();
+  listenToAddTopLevelPerson();
 }
 
 displayEverything();

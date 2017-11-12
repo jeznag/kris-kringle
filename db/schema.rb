@@ -10,7 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171111233011) do
+ActiveRecord::Schema.define(version: 20171112100250) do
+
+  create_table "accounts", force: :cascade do |t|
+    t.string "account_name"
+    t.string "account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "family_members", force: :cascade do |t|
     t.string "name"
@@ -19,8 +26,8 @@ ActiveRecord::Schema.define(version: 20171111233011) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "family_member_type"
-    t.integer "parent_id"
-    t.integer "account_id"
+    t.string "parent_id"
+    t.string "account_id"
   end
 
   create_table "gift_exchanges", force: :cascade do |t|
@@ -32,7 +39,7 @@ ActiveRecord::Schema.define(version: 20171111233011) do
     t.string "receiver_type"
     t.string "giver_type"
     t.string "xmas_year"
-    t.integer "account_id"
+    t.string "account_id"
   end
 
 end

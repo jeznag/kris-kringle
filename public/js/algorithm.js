@@ -12,7 +12,11 @@ function compileTree(jsonData) {
   jsonData.forEach((familyMember) => {
     if (familyMember.parent_id) {
       const parent = findNodeByID(outputTree, familyMember.parent_id);
-      parent.children.push(compileNode(familyMember));
+      if (parent) {
+        parent.children.push(compileNode(familyMember));
+      } else {
+        debugger;
+      }
     }
   });
   return outputTree;
@@ -41,7 +45,7 @@ function removeNode(tree, nodeID) {
   const node = findNodeByID(tree, nodeID);
   const parentNode = findNodeByID(tree, node.parent);
   let indexOfChildNode = parentNode.children.reduce((result, child, index) => {
-    if (child.ID === nodeID) {
+    if (child.ID.toString() === nodeID.toString()) {
       return index;
     }
     return result;
@@ -126,7 +130,7 @@ function findNode(tree, name) {
 
 function findNodeByID(tree, ID) {
   let result;
-  if (!ID) {
+  if (!ID || ID === 'root') {
     return tree;
   }
   bfs(tree, (node) => {
