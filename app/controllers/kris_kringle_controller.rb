@@ -1,8 +1,4 @@
 class KrisKringleController < ApplicationController
-  def index
-    render 'home/index'
-  end
-
   def kris_kringle
     @account_id = params[:account_id]
     matching_account = Account.where(account_id: @account_id).first
