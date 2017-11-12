@@ -6,3 +6,11 @@ Generates kris kringle matches based on the following business rules.
 * 5. Any left over people should be assigned to a leftover pool
 
 Uses a very inefficient graph searching approach to find matches based on social distance.
+
+# TODO
+- Show loading spinner
+- Set up mailers
+- multi tenancy
+- add extra distance if someone is a partner
+- dropdown for family member type
+- graph of gift giving

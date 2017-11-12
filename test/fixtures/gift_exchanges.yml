@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  giver: MyString
+  family_member: MyString
+  receiver: MyString
+  family_member: MyString
+  social_distance: MyString
+  string: MyString
+
+two:
+  giver: MyString
+  family_member: MyString
+  receiver: MyString
+  family_member: MyString
+  social_distance: MyString
+  string: MyString

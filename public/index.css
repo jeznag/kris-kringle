@@ -1,0 +1,43 @@
+body, input, button {
+  font-family: monospace;
+}
+
+.node {
+  display: flex;
+  padding-left: 0;
+  padding-top: 3rem;
+}
+
+.node[data-child-num="0"]:not([data-depth="1"]) {
+  padding-left: 0;
+}
+
+.node[data-child-num="0"][data-depth="1"] {
+  padding-top: 0;
+}
+
+.input-wrapper {
+  border: 1px solid black;
+  height: 9.5rem;
+  padding: 1rem;
+  width: 9rem;
+}
+
+.container {
+  margin-left: 2rem;
+  margin-top: 1rem;
+  padding-bottom: 3rem;
+}
+
+.margin-top-md {
+  margin-top: 2rem;
+}
+
+th {
+  text-align: left;
+}
+
+td, th {
+  border: 1px solid black;
+  padding: 1rem;
+}

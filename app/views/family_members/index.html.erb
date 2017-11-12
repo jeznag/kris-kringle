@@ -1,0 +1,35 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Family Members</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Partner</th>
+      <th>Type</th>
+      <th>Parent</th>
+      <th>Children</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @family_members.each do |family_member| %>
+      <tr>
+        <td><%= family_member.name %></td>
+        <td><%= family_member.partner %></td>
+        <td><%= family_member.family_member_type %></td>
+        <td><%= family_member.parent.first&.name %></td>
+        <td><%= family_member.children.pluck('name').join(', ') %></td>
+        <td><%= link_to 'Show', family_member %></td>
+        <td><%= link_to 'Edit', edit_family_member_path(family_member) %></td>
+        <td><%= link_to 'Destroy', family_member, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Family Member', new_family_member_path %>

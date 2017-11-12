@@ -1,0 +1,47 @@
+<%= form_with(model: gift_exchange, local: true) do |form| %>
+  <% if gift_exchange.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(gift_exchange.errors.count, "error") %> prohibited this gift_exchange from being saved:</h2>
+
+      <ul>
+      <% gift_exchange.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :giver %>
+    <%= form.select :giver_id, options_from_collection_for_select(@possible_givers, :id, :name, gift_exchange.giver_id) %>
+  </div>
+
+  <div class="field">
+    <%= form.label :receiver %>
+    <%= form.select :receiver_id, options_from_collection_for_select(@possible_receivers, :id, :name, gift_exchange.receiver_id) %>
+  </div>
+
+  <div class="field">
+    <%= form.label :social_distance %>
+    <%= form.text_field :social_distance, id: :gift_exchange_social_distance %>
+  </div>
+
+  <div class="field">
+    <%= form.label :receiver_type %>
+    <%= form.select :receiver_type, options_from_collection_for_select(@family_member_types, :value, :text, gift_exchange.receiver_type) %>
+  </div>
+
+  <div class="field">
+    <%= form.label :giver_type %>
+    <%= form.select :giver_type, options_from_collection_for_select(@family_member_types, :value, :text, gift_exchange.giver_type) %>
+  </div>
+
+  <div class="field">
+    <%= form.label :xmas_year %>
+    <%= form.text_field :xmas_year, id: :xmas_year %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>
