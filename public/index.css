@@ -24,7 +24,7 @@ body, input, button {
 }
 
 .input-wrapper[data-disabled="disabled"] {
-  height: 7rem;
+  height: 10rem;
 }
 
 .container {
