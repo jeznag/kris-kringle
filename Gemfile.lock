@@ -1,5 +1,4 @@
 GEM
-  remote: http://gems.railscamp.local/
   specs:
     actioncable (5.1.4)
       actionpack (= 5.1.4)
