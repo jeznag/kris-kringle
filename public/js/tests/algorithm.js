@@ -6,152 +6,173 @@ const testData = [
     name: "Jeremy Nagel",
     partner: "Sandy Xu",
     family_member_type: "young adult",
-    parent_id: 2
+    parent_id: 2,
+    participating_this_year: 'true',
   },
   {
     id: 2,
     name: "Judy McGannon",
     partner: "Peter Nagel",
     family_member_type: "old guard",
-    parent_id: null
+    parent_id: null,
+    participating_this_year: 'true',
   },
   {
     id: 3,
     name: "Alice Nagel",
     partner: "",
     family_member_type: "young adult",
-    parent_id: 2
+    parent_id: 2,
+    participating_this_year: false,
   },
   {
     id: 4,
     name: "Matthew Nagel",
     partner: "Karen",
     family_member_type: "young adult",
-    parent_id: 2
+    parent_id: 2,
+    participating_this_year: 'true',
   },
   {
     id: 5,
     name: "Jane Fleming",
     partner: "Tim Fleming",
     family_member_type: "old guard",
-    parent_id: null
+    parent_id: null,
+    participating_this_year: 'true',
   },
   {
     id: 6,
     name: "William Fleming",
     partner: "Will's GF",
     family_member_type: "young adult",
-    parent_id: 5
+    parent_id: 5,
+    participating_this_year: 'true',
   },
   {
     id: 7,
     name: "Ruby Fleming",
     partner: "Ruby's BF",
     family_member_type: "young adult",
-    parent_id: 5
+    parent_id: 5,
+    participating_this_year: 'true',
   },
   {
     id: 8,
     name: "Henry Fleming",
     partner: "",
     family_member_type: "kid",
-    parent_id: 5
+    parent_id: 5,
+    participating_this_year: 'true',
   },
   {
     id: 9,
     name: "George Fleming",
     partner: "",
     family_member_type: "kid",
-    parent_id: 5
+    parent_id: 5,
+    participating_this_year: 'true',
   },
   {
     id: 10,
     name: "Fred Fleming",
     partner: "",
     family_member_type: "kid",
-    parent_id: 5
+    parent_id: 5,
+    participating_this_year: 'true',
   },
   {
     id: 11,
     name: "Xavier Fleming",
     partner: "",
     family_member_type: "kid",
-    parent_id: 5
+    parent_id: 5,
+    participating_this_year: 'true',
   },
   {
     id: 12,
     name: "Maryanne",
     partner: "Dan",
     family_member_type: "old guard",
-    parent_id: null
+    parent_id: null,
+    participating_this_year: 'true',
   },
   {
     id: 13,
     name: "Dan McGannon",
     partner: "Anne Rosamilia",
     family_member_type: "old guard",
-    parent_id: null
+    parent_id: null,
+    participating_this_year: 'true',
   },
   {
     id: 14,
     name: "Claire McGannon",
     partner: "Ash",
     family_member_type: "young adult",
-    parent_id: 13
+    parent_id: 13,
+    participating_this_year: 'true',
   },
   {
     id: 15,
     name: "Elena McGannon",
     partner: "Matt (Elena BF)",
     family_member_type: "young adult",
-    parent_id: 13
+    parent_id: 13,
+    participating_this_year: 'true',
   },
   {
     id: 16,
     name: "Francesca McGannon",
     partner: "",
     family_member_type: "young adult",
-    parent_id: 13
+    parent_id: 13,
+    participating_this_year: 'true',
   },
   {
     id: 17,
     name: "James McGannon",
     partner: "",
     family_member_type: "kid",
-    parent_id: 13
+    parent_id: 13,
+    participating_this_year: 'true',
   },
   {
     id: 18,
     name: "Emily Maher",
     partner: "Peter Maher",
     family_member_type: "old guard",
-    parent_id: null
+    parent_id: null,
+    participating_this_year: 'true',
   },
   {
     id: 19,
     name: "Patrick Maher",
     partner: "",
     family_member_type: "kid",
-    parent_id: 18
+    parent_id: 18,
+    participating_this_year: 'true',
   },
   {
     id: 20,
     name: "Oliver Maher",
     partner: "",
     family_member_type: "kid",
-    parent_id: 18
+    parent_id: 18,
+    participating_this_year: 'true',
   },
   {
     id: 21,
     name: "Fake Kid",
     partner: "",
     family_member_type: "kid",
-    parent_id: 1
+    parent_id: 1,
+    participating_this_year: 'true',
   }
 ];
 
 const exchangeDataFromLastYearYoungAdults = [
-  { giver: "Jeremy Nagel", receiver: "William Fleming" },
+  { giver: "Jeremy Nagel", receiver: "William Fleming"},
   { giver: "Ruby Fleming", receiver: "Claire McGannon" },
   { giver: "Elena McGannon", receiver: "Jeremy Nagel" },
   { giver: "Alice Nagel", receiver: "Will GF" },
@@ -300,6 +321,21 @@ function checkDistanceCalculation() {
       person1: "Matt (Elena BF)",
       person2: "Alice Nagel",
       expectedDistance: 9
+    },
+    {
+      person1: "Judy McGannon",
+      person2: "Peter Nagel",
+      expectedDistance: 0
+    },
+    {
+      person1: "Judy McGannon",
+      person2: "Jane Fleming",
+      expectedDistance: 4
+    },
+    {
+      person1: "Tim Fleming",
+      person2: "Jane Fleming",
+      expectedDistance: 0
     }
   ];
 
@@ -327,6 +363,18 @@ function arrayDiff(array1, array2) {
   return missingItems;
 }
 
+function getPeopleOfType(type) {
+  return testData.reduce((peopleList, personDatum) => {
+    if (personDatum.name && personDatum.participating_this_year === 'true' && personDatum.family_member_type === type) {
+      peopleList.push(personDatum.name);
+    }
+    if (personDatum.partner && personDatum.participating_this_year === 'true' && personDatum.family_member_type === type) {
+      peopleList.push(personDatum.partner);
+    }
+    return peopleList;
+  }, []);
+}
+
 function checkResultValid(testTree, giverType, receiverType, exchangeDataFromLastYear) {
   const result = algo.run(
     testTree,
@@ -334,28 +382,31 @@ function checkResultValid(testTree, giverType, receiverType, exchangeDataFromLas
     receiverType,
     exchangeDataFromLastYear
   );
-  const allPeople = testData.reduce((peopleList, personDatum) => {
-    if (personDatum.name) {
-      peopleList.push(personDatum.name);
-    }
-    if (personDatum.partner) {
-      peopleList.push(personDatum.partner);
-    }
-    return peopleList;
-  }, []);
-  const expectedGivers = allPeople.filter((person) => person.family_member_type === giverType);
-  const expectedReceivers = allPeople.filter((person) => person.family_member_type === receiverType);
+
+  const expectedGivers = getPeopleOfType(giverType);
+  const expectedReceivers = getPeopleOfType(receiverType);
   const actualGivers = result.result.map((exchange) => exchange.giver);
   const actualReceivers = result.result.map((exchange) => exchange.receiver);
 
   const missingReceivers = arrayDiff(expectedReceivers, actualReceivers);
+  const extraReceivers = arrayDiff(actualReceivers, expectedReceivers);
   const missingGivers = arrayDiff(expectedGivers, actualGivers);
+  const extraGivers = arrayDiff(actualGivers, expectedGivers);
 
   if (missingGivers.length) {
     throw new Error("FAIL - missing givers " + JSON.stringify(missingGivers));
   }
   if (missingReceivers.length) {
-    throw new Error("FAIL - missing receivers? " + JSON.stringify(missingReceivers));
+    throw new Error("FAIL - missing receivers " + JSON.stringify(missingReceivers));
+  }
+
+  if (extraGivers.length) {
+    throw new Error("FAIL - extra givers " + JSON.stringify(extraGivers));
+  }
+  if (extraReceivers.length) {
+    if (!extraReceivers.every((receiver) => receiver === 'NO-ONE')) {
+      throw new Error("FAIL - extra receivers " + JSON.stringify(extraReceivers));
+    }
   }
   const hasRecursiveGiving = checkHasRecursiveGiving(result.result);
   if (hasRecursiveGiving) {

@@ -4,7 +4,7 @@
 <div class="container">
   <h1>Results for <%=Date.today.strftime("%Y")%></h1>
   <%- if (params.has_key?('admin')) %>
-    <h3>Your Account ID: <%=@account_id%></h3>
+    <h3>URL to share with other people: <%=kris_kringle_url(account_id: @account_id)%></h3>
     <button id="generate-results">Generate Results</button>
   <%- end %>
   <label for="filter-results" />Find Yourself</label>
@@ -18,7 +18,9 @@
 <div class="container">
   <h1>Family Tree</h1>
   <%- if (params.has_key?('admin')) %>
-    <button id="add-top-level-person">Add Person</button>
+    <div class="input-group margin-botton-sm">
+      <button id="add-top-level-person">Add Person</button>
+    </div>
   <%- end %>
   <div id="tree" data-disabled="<%=!params.has_key?(:admin)%>">
     <div class="loading">

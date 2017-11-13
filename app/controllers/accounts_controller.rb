@@ -4,7 +4,8 @@ class AccountsController < ApplicationController
   # GET /accounts
   # GET /accounts.json
   def index
-    if (!params.has_key?('jezzaboss'))
+    puts 'BOSS MODE!!!' + ENV['bossmodekey'].to_s
+    if (!params.has_key?(ENV['bossmodekey']))
       @accounts = []
     else
       @accounts = Account.all
@@ -33,6 +34,7 @@ class AccountsController < ApplicationController
       account_id: account_id
     }))
 
+    AccountMailer.welcome_email(@account).deliver_later
     respond_to do |format|
       if @account.save
         format.html { redirect_to @account, notice: 'Account was successfully created.' }

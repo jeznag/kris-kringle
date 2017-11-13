@@ -5,7 +5,7 @@ class GiftExchangesController < ApplicationController
   # GET /gift_exchanges
   # GET /gift_exchanges.json
   def index
-    if (!params.has_key?('jezzaboss'))
+    if (!params.has_key?(ENV['bossmodekey']))
       if (params.has_key?('account_id'))
         @gift_exchanges = GiftExchange.where(account_id: params[:account_id])
       else
@@ -91,7 +91,7 @@ class GiftExchangesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_gift_exchange
-      if (params.has_key?('jezzaboss'))
+      if (params.has_key?(ENV['bossmodekey']))
         @gift_exchange = GiftExchange.find(params[:id])
       else
         @gift_exchange = GiftExchange.where("id='#{params[:id]}' AND account_id='#{params[:account_id]}'").first

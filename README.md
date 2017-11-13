@@ -8,5 +8,9 @@ Generates kris kringle matches based on the following business rules.
 Uses a very inefficient graph searching approach to find matches based on social distance.
 
 # TODO
-- Set up mailers
+- Fix select type issue
+- Add field to signal not involved this year
+- Put admin key in env variable
+- Block brute forcing account ID
+- Test mailers (email account URL)
 - graph of gift giving

@@ -63,26 +63,31 @@ function renderInputs(node, parentEl, indexInFamily) {
     newWrapperEl.id = `person-${node.ID}-wrapper`;
     const buttons = !inputsDisabled ? `<button data-action="add" data-node-id="${node.ID}">Add Child</button>
     <button data-action="remove" data-node-id="${node.ID}">Remove Person</button>` : '';
-
     newWrapperEl.innerHTML = `
       <div class="input-wrapper" data-disabled="${inputsDisabled}">
         <div class="input-group">
-          <label for="${node.name}">Name</label>
-          <input ${inputsDisabled} id="${node.name}-name" data-type="name" type="text" value="${node.name || ''}" />
+          <label for="${node.ID}-name">Name</label>
+          <input ${inputsDisabled} id="${node.ID}-name" data-type="name" type="text" value="${node.name || ''}" />
         </div>
         <div class="input-group">
-          <label for="${node.name}-partner">Partner</label>
-          <input ${inputsDisabled} id="${node.name}-partner" type="text" data-type="partner" value="${node.partner || ''}" />
+          <label for="${node.ID}-partner">Partner</label>
+          <input ${inputsDisabled} id="${node.ID}-partner" type="text" data-type="partner" value="${node.partner || ''}" />
         </div>
         <div class="input-group">
-          <label for="${node.name}-type">Type</label>
-          <select ${inputsDisabled} id="${node.name}-type" type="text" data-type="type" value="${node.type || ''}">
+          <label for="${node.ID}-type">Type</label>
+          <select ${inputsDisabled} id="${node.ID}-type" type="text" data-type="type" value="${node.type || ''}">
             <option ${node.type === 'kid' ? 'selected' : ''} value="kid">Kid</option>
             <option ${node.type === 'young adult' ? 'selected' : ''} value="young adult">Young Adult</option>
             <option ${node.type === 'old guard' ? 'selected' : ''} value="old guard">Old Guard</option>
           </select>
         </div>
-        ${buttons}
+        <div class="input-group">
+          <label for="${node.ID}-participating" class="inline-block">Participating?</label>
+          <input ${inputsDisabled} id="${node.ID}-participating" type="checkbox" data-type="participating" ${node.participating ? 'checked' : ''} />
+        </div>
+        <div class="margin-top-xs">
+          ${buttons}
+        </div>
       </div>
     `;
 
@@ -102,12 +107,14 @@ function renderInputs(node, parentEl, indexInFamily) {
         }
       });
     });
-    newWrapperEl.querySelectorAll('input').forEach((input) => {
+    newWrapperEl.querySelectorAll('input, select').forEach((input) => {
       const nodeID = node.ID;
       input.addEventListener('change', (e) => {
         const propertyKey = e.target.getAttribute('data-type');
         const node = algo.findNodeByID(compiledTree, nodeID);
-        node[propertyKey] = e.target.value;
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        node[propertyKey] = value;
+        debugger;
         clearTree();
         showFamilyTree();
         updatePersonOnServer(node, getCSRF());
@@ -232,10 +239,11 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
     </table>
   `;
   const performanceStats = iterations ? `<p>Generated after ${iterations} iterations in ${executionTime} ms</p>` : '';
-  return `<h2>Results for ${resultType}</h2>
+  return `<div class="margin-top-md">
+  <h2>Results for ${resultType}</h2>
   ${performanceStats}
   ${tableHTML}
-  `;
+  </div>`;
 }
 
 function addResultsFiltering() {
@@ -259,6 +267,7 @@ function addPerson(parentID) {
     partner: '',
     children: [],
     parent: parentID || '',
+    participating: true,
     account_id: window.accountID,
   };
   showLoaderForTree();

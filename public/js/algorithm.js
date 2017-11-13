@@ -29,6 +29,7 @@ function compileNode(nodeData) {
     partner: nodeData.partner,
     type: nodeData.family_member_type,
     parent: nodeData.parent_id,
+    participating: nodeData.participating_this_year === 'true',
     children: []
   };
 }
@@ -207,13 +208,13 @@ function getExchangeForReceiver(exchanges, receiverName) {
   return exchanges.find((exchange) => exchange.receiver === receiverName);
 }
 
-function getAllPeopleInTree(tree, type) {
+function getAllParticipatingPeopleInTree(tree, type) {
   const people = [];
   dfs(tree, (node) => {
-    if (node.name && node.type === type) {
+    if (node.name && node.type === type && node.participating) {
       people.push(node.name);
     }
-    if (node.partner && node.type === type) {
+    if (node.partner && node.type === type && node.participating) {
       people.push(node.partner);
     }
   });
@@ -268,8 +269,8 @@ function run(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear) 
   while (!isValidResult && iterations < MAX_ITERATIONS) {
     result = generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear);
     iterations++;
-    const possibleRecipients = getAllPeopleInTree(familyTree, typeReceiver).sort();
-    const possibleGivers = getAllPeopleInTree(familyTree, typeGiver).sort();
+    const possibleRecipients = getAllParticipatingPeopleInTree(familyTree, typeReceiver).sort();
+    const possibleGivers = getAllParticipatingPeopleInTree(familyTree, typeGiver).sort();
     const giversInResult = result.map((exchange) => exchange.giver).sort();
     const receiversInResult = result.map((exchange) => exchange.receiver).sort();
 
@@ -332,8 +333,8 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
   const numPossibleExchanges = treeDepth(familyTree);
 
   let numAttempts = 0;
-  let possibleRecipients = shuffleArray(getAllPeopleInTree(familyTree, typeReceiver));
-  let possibleGivers = shuffleArray(getAllPeopleInTree(familyTree, typeGiver));
+  let possibleRecipients = shuffleArray(getAllParticipatingPeopleInTree(familyTree, typeReceiver));
+  let possibleGivers = shuffleArray(getAllParticipatingPeopleInTree(familyTree, typeGiver));
   let possibleRecipientsForThisGiver = possibleRecipients.slice(0);
   let currentGiver = possibleGivers[0];
   while (possibleGivers.length > 0) {

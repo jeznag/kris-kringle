@@ -3,9 +3,17 @@ async function updatePersonOnServer(nodeData, csrf) {
   headers.append('X-CSRF-Token', csrf);
   headers.append('Content-Type', 'application/json');
 
-  const updatedDataForServer = Object.assign({ id: nodeData.ID }, nodeData);
+  const updatedDataForServer = Object.assign({
+    family_member_type: nodeData.type,
+    parent_id: nodeData.parent,
+    participating_this_year: nodeData.participating.toString(),
+  }, nodeData);
   delete updatedDataForServer.ID;
+  delete updatedDataForServer.type;
+  delete updatedDataForServer.parent;
   delete updatedDataForServer.children;
+  delete updatedDataForServer.participating;
+  debugger;
 
   const response = await fetch(`/family_members/${nodeData.ID}.json?account_id=${window.accountID}`, {
     method: 'PATCH',
@@ -35,7 +43,7 @@ async function addPerson(personData, csrf) {
   const headers = new Headers();
   headers.append('X-CSRF-Token', csrf);
   headers.append('Content-Type', 'application/json');
-  const personDataForServer = Object.assign({ parent_id: personData.parent }, personData);
+  const personDataForServer = Object.assign({ parent_id: personData.parent, participating_this_year: personData.participating }, personData);
   delete personDataForServer.parent;
   const response = await fetch(`/family_members.json?account_id=${window.accountID}`, {
     method: 'POST',
