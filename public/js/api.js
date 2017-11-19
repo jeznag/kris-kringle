@@ -13,7 +13,6 @@ async function updatePersonOnServer(nodeData, csrf) {
   delete updatedDataForServer.parent;
   delete updatedDataForServer.children;
   delete updatedDataForServer.participating;
-  debugger;
 
   const response = await fetch(`/family_members/${nodeData.ID}.json?account_id=${window.accountID}`, {
     method: 'PATCH',
@@ -78,7 +77,7 @@ async function saveGiftExchanges(exchanges, csrf, xmasYear) {
       xmas_year: xmasYear,
       gift_exchanges: exchanges.map((exchangeData) => {
         return {
-          gift_exchange: exchangeData,
+          gift_exchange: Object.assign({ account_id: window.accountID }, exchangeData),
         };
       })
     }),
