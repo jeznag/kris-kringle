@@ -289,7 +289,7 @@ function arrayDiff(array1, array2) {
   return missingItems;
 }
 
-const MAX_ITERATIONS = 10;
+const MAX_ITERATIONS = 50;
 /**
  * Generates matches. Performs a double check to make sure there is no repeat giving.
  */
