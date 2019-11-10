@@ -225,7 +225,7 @@ function getAllParticipatingPeopleInTree(tree, type) {
   return people;
 }
 
-let MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 6;
+let MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 10;
 
 function shuffleArray(arr) {
   const shuffledArray = arr.slice(0);
@@ -341,6 +341,9 @@ function swapRecipientsAround(exchanges, currentGiver, familyTree) {
  */
 function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts = 0) {
   if (attempts > 1000) {
+    console.log(
+      `Couldn't find any options with threshold ${MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE}. Lowering by 1`
+    );
     MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE -= 1;
 
     if (MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE > 0) {
