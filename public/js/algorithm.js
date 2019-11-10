@@ -160,6 +160,9 @@ function hasChildWithName(node, name) {
 }
 
 function arePartners(tree, person1, person2) {
+  if (person1 === 'Peter' && person2 === 'Judy') {
+    debugger;
+  }
   const person1Node = findNode(tree, person1);
   return (person1Node.name === person1 && person1Node.partner === person2) || (person1Node.partner === person1 && person1Node.name === person2);
 }
@@ -340,7 +343,7 @@ function swapRecipientsAround(exchanges, currentGiver, familyTree) {
  * @return {Array<{giver: string, receiver: string}>}  Best guess at matches
  */
 function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts = 0) {
-  if (attempts > 1000) {
+  if (attempts > 200) {
     console.log(
       `Couldn't find any options with threshold ${MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE}. Lowering by 1`
     );
