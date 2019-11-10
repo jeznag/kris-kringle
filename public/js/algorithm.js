@@ -1,15 +1,17 @@
-const NO_RECIPIENT = 'NO-ONE';
+const NO_RECIPIENT = "NO-ONE";
 
 function compileTree(jsonData) {
-  const oldGuard = jsonData.filter((familyMember) => familyMember.parent_id === null).map(compileNode);
+  const oldGuard = jsonData
+    .filter(familyMember => familyMember.parent_id === null)
+    .map(compileNode);
   const outputTree = {
-    type: 'root',
-    id: 'root',
-    name: 'root',
+    type: "root",
+    id: "root",
+    name: "root",
     children: oldGuard
   };
 
-  jsonData.forEach((familyMember) => {
+  jsonData.forEach(familyMember => {
     if (familyMember.parent_id) {
       const parent = findNodeByID(outputTree, familyMember.parent_id);
       if (parent) {
@@ -29,7 +31,7 @@ function compileNode(nodeData) {
     partner: nodeData.partner,
     type: nodeData.family_member_type,
     parent: nodeData.parent_id,
-    participating: nodeData.participating_this_year === 'true',
+    participating: nodeData.participating_this_year === "true",
     children: []
   };
 }
@@ -57,15 +59,15 @@ function removeNode(tree, nodeID) {
 function bfs(node, visitingFunction) {
   visitingFunction(node);
   if (node.children) {
-    node.children.forEach((child) => {
+    node.children.forEach(child => {
       bfs(child, visitingFunction);
-    })
+    });
   }
 }
 
 function dfs(node, visitingFunction) {
   if (node.children) {
-    node.children.forEach((child) => {
+    node.children.forEach(child => {
       dfs(child, visitingFunction);
     });
   }
@@ -74,7 +76,7 @@ function dfs(node, visitingFunction) {
 
 function treeDepth(tree) {
   let count = 0;
-  dfs(tree, (node) => {
+  dfs(tree, node => {
     if (node.name) {
       count += node.partner ? 2 : 1;
     }
@@ -89,7 +91,7 @@ function getDepthOfPerson(tree, name, currentDepth) {
     }
 
     let result = -1;
-    tree.children.some((node) => {
+    tree.children.some(node => {
       const newDepth = getDepthOfPerson(node, name, currentDepth + 1);
       if (newDepth > -1) {
         result = newDepth;
@@ -106,6 +108,11 @@ function hasSharedParent(tree, name1, name2) {
   const node1 = findNode(tree, name1);
   const node2 = findNode(tree, name2);
 
+  if (node1.partner === name1 || node2.partner === name2) {
+    // not going to have shared parents if they're partners (unless they married their sibling :O)
+    return false;
+  }
+
   if (!node1 || !node2) {
     return false;
   }
@@ -113,19 +120,23 @@ function hasSharedParent(tree, name1, name2) {
   let parent1Node = findNodeByID(tree, node1.parent);
   let parent2Node = findNodeByID(tree, node2.parent);
 
-  if (parent1Node && parent1Node.type === 'root') {
+  if (parent1Node && parent1Node.type === "root") {
     parent1Node = node1;
   }
-  if (parent2Node && parent2Node.type === 'root') {
+  if (parent2Node && parent2Node.type === "root") {
     parent2Node = node2;
   }
 
-  return parent1Node.name === parent2Node.name || isParentOf(tree, parent1Node.name, parent2Node.name) || isParentOf(tree, parent2Node.name, parent1Node.name);
+  return (
+    parent1Node.name === parent2Node.name ||
+    isParentOf(tree, parent1Node.name, parent2Node.name) ||
+    isParentOf(tree, parent2Node.name, parent1Node.name)
+  );
 }
 
 function findNode(tree, name) {
   let result;
-  bfs(tree, (node) => {
+  bfs(tree, node => {
     if (node.name === name || node.partner === name) {
       result = node;
     }
@@ -135,10 +146,10 @@ function findNode(tree, name) {
 
 function findNodeByID(tree, ID) {
   let result;
-  if (!ID || ID === 'root') {
+  if (!ID || ID === "root") {
     return tree;
   }
-  bfs(tree, (node) => {
+  bfs(tree, node => {
     if (node.ID && node.ID.toString() === ID.toString()) {
       result = node;
     }
@@ -156,15 +167,17 @@ function hasChildWithName(node, name) {
   if (!node || !node.children) {
     return false;
   }
-  return node.children.some((child) => child.name === name || child.partner === name);
+  return node.children.some(
+    child => child.name === name || child.partner === name
+  );
 }
 
 function arePartners(tree, person1, person2) {
-  if (person1 === 'Peter' && person2 === 'Judy') {
-    debugger;
-  }
   const person1Node = findNode(tree, person1);
-  return (person1Node.name === person1 && person1Node.partner === person2) || (person1Node.partner === person1 && person1Node.name === person2);
+  return (
+    (person1Node.name === person1 && person1Node.partner === person2) ||
+    (person1Node.partner === person1 && person1Node.name === person2)
+  );
 }
 
 function socialDistance(tree, person1, person2) {
@@ -179,7 +192,10 @@ function socialDistance(tree, person1, person2) {
   const depthPerson1 = Math.pow(getDepthOfPerson(tree, person1, 1), 1);
   const depthPerson2 = Math.pow(getDepthOfPerson(tree, person2, 1), 1);
 
-  if (isParentOf(tree, person1, person2) || isParentOf(tree, person2, person1)) {
+  if (
+    isParentOf(tree, person1, person2) ||
+    isParentOf(tree, person2, person1)
+  ) {
     return Math.abs(depthPerson1 - depthPerson2);
   }
 
@@ -192,11 +208,12 @@ function socialDistance(tree, person1, person2) {
     if (!areBloodRelatives(tree, person1, person2)) {
       return 4;
     }
-    return 0;
+
+    return Math.pow(2, Math.abs(depthPerson1 - depthPerson2));
   }
 
-  const baseDistance = areBloodRelatives(tree, person1, person2) ? 2 : 3;
-  return Math.pow(baseDistance + Math.abs(depthPerson1 - depthPerson2), 2);
+  const baseDistance = areBloodRelatives(tree, person1, person2) ? 1 : 2;
+  return Math.pow(2, baseDistance + Math.abs(depthPerson1 - depthPerson2));
 }
 
 function areBloodRelatives(tree, person1, person2) {
@@ -204,20 +221,20 @@ function areBloodRelatives(tree, person1, person2) {
   const person2Node = findNode(tree, person2);
   // the blood relative gets to be the "name" whereas relatives in law
   // will be in the "partner" property
-  return (person1Node.name === person1 && person2Node.name === person2);
+  return person1Node.name === person1 && person2Node.name === person2;
 }
 
 function getExchangeForGiver(exchanges, giverName) {
-  return exchanges.find((exchange) => exchange.giver === giverName);
+  return exchanges.find(exchange => exchange.giver === giverName);
 }
 
 function getExchangeForReceiver(exchanges, receiverName) {
-  return exchanges.find((exchange) => exchange.receiver === receiverName);
+  return exchanges.find(exchange => exchange.receiver === receiverName);
 }
 
 function getAllParticipatingPeopleInTree(tree, type) {
   const people = [];
-  dfs(tree, (node) => {
+  dfs(tree, node => {
     if (node.name && node.type === type && node.participating) {
       people.push(node.name);
     }
@@ -232,13 +249,21 @@ let MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 10;
 
 function shuffleArray(arr) {
   const shuffledArray = arr.slice(0);
-  return shuffledArray.sort((a, b) => Math.random() > 0.5 ? -1 : 1);
+  return shuffledArray.sort((a, b) => (Math.random() > 0.5 ? -1 : 1));
 }
 
 function checkNoRepeatGiving(thisYearExchanges, lastYearExchanges) {
-  return thisYearExchanges.every((exchange) => {
-    const hasRepeatGiving = lastYearExchanges.find((exchangeToCheck) => JSON.stringify(exchange) === JSON.stringify(exchangeToCheck));
-    return !hasRepeatGiving;
+  return thisYearExchanges.every(exchange => {
+    const hasRepeatGivingThisYear =
+      thisYearExchanges.filter(
+        exchangeToCheck => exchangeToCheck.giver === exchange.giver
+      ).length > 1;
+
+    const gaveToSamePersonLastYear = lastYearExchanges.find(
+      exchangeToCheck =>
+        JSON.stringify(exchange) === JSON.stringify(exchangeToCheck)
+    );
+    return !gaveToSamePersonLastYear && !hasRepeatGivingThisYear;
   });
 }
 
@@ -255,7 +280,7 @@ function checkNoRecursiveGiving(exchanges) {
 
 function arrayDiff(array1, array2) {
   const missingItems = [];
-  array1.forEach((item) => {
+  array1.forEach(item => {
     if (!array2.includes(item)) {
       missingItems.push(item);
     }
@@ -264,22 +289,41 @@ function arrayDiff(array1, array2) {
   return missingItems;
 }
 
-const MAX_ITERATIONS = 10;
+const MAX_ITERATIONS = 1000;
 /**
  * Generates matches. Performs a double check to make sure there is no repeat giving.
  */
-function run(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear) {
+function run(
+  familyTree,
+  typeGiver,
+  typeReceiver,
+  exchangeDataFromPreviousYear
+) {
   let result;
   let isValidResult = false;
   let iterations = 0;
   const startTime = new Date();
-  while (!isValidResult && iterations < MAX_ITERATIONS) {
-    result = generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear);
+  let bestResult = { totalDistance: 0 };
+
+  while (iterations < MAX_ITERATIONS) {
+    MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 10;
+    result = generateMatches(
+      familyTree,
+      typeGiver,
+      typeReceiver,
+      exchangeDataFromPreviousYear
+    );
     iterations++;
-    const possibleRecipients = getAllParticipatingPeopleInTree(familyTree, typeReceiver).sort();
-    const possibleGivers = getAllParticipatingPeopleInTree(familyTree, typeGiver).sort();
-    const giversInResult = result.map((exchange) => exchange.giver).sort();
-    const receiversInResult = result.map((exchange) => exchange.receiver).sort();
+    const possibleRecipients = getAllParticipatingPeopleInTree(
+      familyTree,
+      typeReceiver
+    ).sort();
+    const possibleGivers = getAllParticipatingPeopleInTree(
+      familyTree,
+      typeGiver
+    ).sort();
+    const giversInResult = result.map(exchange => exchange.giver).sort();
+    const receiversInResult = result.map(exchange => exchange.receiver).sort();
 
     const missingRecipients = arrayDiff(possibleRecipients, receiversInResult);
     if (missingRecipients.length) {
@@ -291,42 +335,56 @@ function run(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear) 
       continue;
     }
 
-    isValidResult = checkNoRepeatGiving(result, exchangeDataFromPreviousYear) && checkNoRecursiveGiving(result);
+    isValidResult =
+      checkNoRepeatGiving(result, exchangeDataFromPreviousYear) &&
+      checkNoRecursiveGiving(result);
+
+    if (isValidResult) {
+      const processedResult = result.map(exchange => {
+        return {
+          ...exchange,
+          socialDistance: socialDistance(
+            familyTree,
+            exchange.giver,
+            exchange.receiver
+          )
+        };
+      });
+
+      const totalDistance = processedResult.reduce(
+        (total, exchange) => total + exchange.socialDistance,
+        0
+      );
+
+      if (totalDistance > bestResult.totalDistance) {
+        console.log("totalDistance", totalDistance);
+        console.log(result);
+        bestResult = {
+          totalDistance,
+          exchanges: result
+        };
+      }
+    }
   }
 
-  if (!isValidResult) {
-    result = [];
-  }
   const finishTime = new Date();
   const executionTime = finishTime - startTime;
-  return {
-    result,
-    iterations,
-    executionTime,
-  };
-}
 
-function swapRecipientsAround(exchanges, currentGiver, familyTree) {
-  // stuck here because this person can only buy for themselves now
-  // swap with the first one
-  const exchangeToSwapWith = exchanges.find((exchange) => {
-    const distance = socialDistance(familyTree, currentGiver, exchange.receiver);
-    return distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE;
-  });
+  console.log('Best Result');
+  console.log(bestResult);
 
-  if (!exchangeToSwapWith) {
-    return false;
+  if (!bestResult.totalDistance) {
+    return {
+      result: [],
+      iterations,
+      executionTime
+    };
   }
-
-  const recipientToSwapAround = exchangeToSwapWith.receiver;
-  exchangeToSwapWith.receiver = currentGiver;
-  exchanges.push({
-    giver: currentGiver,
-    receiver: recipientToSwapAround,
-    socialDistance: socialDistance(familyTree, currentGiver, recipientToSwapAround)
-  });
-
-  return true;
+  return {
+    result: bestResult.exchanges,
+    iterations,
+    executionTime
+  };
 }
 
 /**
@@ -342,26 +400,36 @@ function swapRecipientsAround(exchanges, currentGiver, familyTree) {
  * @param  {Array<{giver: string, receiver: string}>} exchangeDataFromPreviousYear  Matches from previous year
  * @return {Array<{giver: string, receiver: string}>}  Best guess at matches
  */
-function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts = 0) {
-  if (attempts > 200) {
-    console.log(
-      `Couldn't find any options with threshold ${MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE}. Lowering by 1`
-    );
+function generateMatches(
+  familyTree,
+  typeGiver,
+  typeReceiver,
+  exchangeDataFromPreviousYear,
+  attempts = 0
+) {
+  if (attempts > 50) {
     MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE -= 1;
 
     if (MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE > 0) {
-      return generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, 0);
+      return generateMatches(
+        familyTree,
+        typeGiver,
+        typeReceiver,
+        exchangeDataFromPreviousYear,
+        0
+      );
     }
 
-    alert('Cannot figure out an optimal giving solution');
-    throw new Error('Aaargh');
+    return [];
   }
   const exchanges = [];
-  const numPossibleExchanges = treeDepth(familyTree);
 
-  let numAttempts = 0;
-  let possibleRecipients = shuffleArray(getAllParticipatingPeopleInTree(familyTree, typeReceiver));
-  let possibleGivers = shuffleArray(getAllParticipatingPeopleInTree(familyTree, typeGiver));
+  let possibleRecipients = shuffleArray(
+    getAllParticipatingPeopleInTree(familyTree, typeReceiver)
+  );
+  let possibleGivers = shuffleArray(
+    getAllParticipatingPeopleInTree(familyTree, typeGiver)
+  );
   let possibleRecipientsForThisGiver = possibleRecipients.slice(0);
   let currentGiver = possibleGivers[0];
   try {
@@ -371,34 +439,33 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
           if (possibleRecipientsForThisGiver.length > 1) {
             return;
           }
-          // The only possible recipient is the same person as the giver
-          // Swap one of the other recipients for the current giver and then
-          // the giver can give to the person they swapped with.
-          const canSwap = swapRecipientsAround(exchanges, currentGiver, familyTree);
-          if (!canSwap) {
-            throw new Error('Invalid combination');
-          }
-          const indexOfGiver = possibleGivers.indexOf(currentGiver);
-          if (indexOfGiver !== -1) {
-            possibleGivers.splice(indexOfGiver, 1);
-          }
-          const indexOfReceiver = possibleRecipients.indexOf(currentGiver);
-          if (indexOfReceiver !== -1) {
-            possibleRecipients.splice(indexOfReceiver, 1);
-          }
-          if (possibleGivers.length > 0) {
-            currentGiver = possibleGivers[0];
-            possibleRecipientsForThisGiver = possibleRecipients.slice(0);
-          }
-          return;
+          throw new Error("Invalid combination");
         }
-        const distance = socialDistance(familyTree, currentGiver, possibleRecipient);
-        const personWhoIsBuyingForGiver = getExchangeForReceiver(exchanges, currentGiver);
-        const recursiveGiving = personWhoIsBuyingForGiver && personWhoIsBuyingForGiver.giver === possibleRecipient;
-        const exchangeFromLastYear = getExchangeForGiver(exchangeDataFromPreviousYear, currentGiver);
-        const boughtForSamePersonLastYear = exchangeFromLastYear && exchangeFromLastYear.receiver === possibleRecipient;
+        const distance = socialDistance(
+          familyTree,
+          currentGiver,
+          possibleRecipient
+        );
+        const personWhoIsBuyingForGiver = getExchangeForReceiver(
+          exchanges,
+          currentGiver
+        );
+        const recursiveGiving =
+          personWhoIsBuyingForGiver &&
+          personWhoIsBuyingForGiver.giver === possibleRecipient;
+        const exchangeFromLastYear = getExchangeForGiver(
+          exchangeDataFromPreviousYear,
+          currentGiver
+        );
+        const boughtForSamePersonLastYear =
+          exchangeFromLastYear &&
+          exchangeFromLastYear.receiver === possibleRecipient;
 
-        if (distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE && !recursiveGiving && !boughtForSamePersonLastYear) {
+        if (
+          distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE &&
+          !recursiveGiving &&
+          !boughtForSamePersonLastYear
+        ) {
           exchanges.push({
             giver: currentGiver,
             receiver: possibleRecipient,
@@ -415,61 +482,26 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
           }
         } else {
           // recipient is too close to giver. Take them off the list of possibilities.
-          const indexOfReceiver = possibleRecipientsForThisGiver.indexOf(possibleRecipient);
+          const indexOfReceiver = possibleRecipientsForThisGiver.indexOf(
+            possibleRecipient
+          );
           possibleRecipientsForThisGiver.splice(indexOfReceiver, 1);
         }
       });
 
-      if (!possibleRecipientsForThisGiver.length) {
-        const exchangeFromLastYear = getExchangeForGiver(exchangeDataFromPreviousYear, currentGiver);
-        const boughtForNoOneLastYear = !exchangeFromLastYear || exchangeFromLastYear.receiver === NO_RECIPIENT;
-
-        if (!boughtForNoOneLastYear) {
-          exchanges.push({
-            giver: currentGiver,
-            receiver: NO_RECIPIENT,
-            socialDistance: '?',
-          });
-        } else {
-          // don't want to buy for no-one two years in a row
-          // find someone who bought for someone last year and is buying for someone this year as well
-          const exchangeToSwapWith = exchanges.find((exchange) => {
-            if (exchange.receiver !== NO_RECIPIENT) {
-              return exchangeDataFromPreviousYear.find((exchangeToCheck) => {
-                return exchangeToCheck.giver === exchange.giver && exchange.receiver !== NO_RECIPIENT;
-              });
-            }
-          });
-
-          if (exchangeToSwapWith) {
-            const oldGiver = exchangeToSwapWith.giver;
-            exchangeToSwapWith.giver = currentGiver;
-            exchangeToSwapWith.socialDistance = socialDistance(familyTree, currentGiver, exchangeToSwapWith.receiver);
-            exchanges.push({
-              giver: oldGiver,
-              receiver: NO_RECIPIENT,
-              socialDistance: '?'
-            });
-          } else {
-            exchanges.push({
-              giver: currentGiver,
-              receiver: NO_RECIPIENT,
-              socialDistance: '?',
-            });
-          }
-        }
-        const indexOfGiver = possibleGivers.indexOf(currentGiver);
-        possibleGivers.splice(indexOfGiver, 1);
-
-        if (possibleGivers.length) {
-          currentGiver = possibleGivers[0];
-          possibleRecipientsForThisGiver = possibleRecipients.slice(0);
-        }
+      if (!possibleRecipientsForThisGiver.length && possibleRecipients.length) {
+        throw new Error("Bad result. Try again");
       }
     }
   } catch (e) {
     // invalid combination - start again
-    return generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts + 1);
+    return generateMatches(
+      familyTree,
+      typeGiver,
+      typeReceiver,
+      exchangeDataFromPreviousYear,
+      attempts + 1
+    );
   }
 
   return exchanges;
@@ -491,7 +523,7 @@ const facade = {
   removeNode
 };
 
-if (typeof module !== 'undefined') {
+if (typeof module !== "undefined") {
   module.exports = facade;
 } else {
   window.algo = facade;

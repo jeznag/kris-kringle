@@ -363,19 +363,33 @@ function arrayDiff(array1, array2) {
   return missingItems;
 }
 
-function getPeopleOfType(type) {
-  return testData.reduce((peopleList, personDatum) => {
-    if (personDatum.name && personDatum.participating_this_year === 'true' && personDatum.family_member_type === type) {
+function getPeopleOfType(type, dataToCheck) {
+  return (dataToCheck || testData).reduce((peopleList, personDatum) => {
+    if (
+      personDatum.name &&
+      personDatum.participating_this_year === "true" &&
+      personDatum.family_member_type === type
+    ) {
       peopleList.push(personDatum.name);
     }
-    if (personDatum.partner && personDatum.participating_this_year === 'true' && personDatum.family_member_type === type) {
+    if (
+      personDatum.partner &&
+      personDatum.participating_this_year === "true" &&
+      personDatum.family_member_type === type
+    ) {
       peopleList.push(personDatum.partner);
     }
     return peopleList;
   }, []);
 }
 
-function checkResultValid(testTree, giverType, receiverType, exchangeDataFromLastYear) {
+function checkResultValid(
+  testTree,
+  giverType,
+  receiverType,
+  exchangeDataFromLastYear,
+  dataToCheck
+) {
   const result = algo.run(
     testTree,
     giverType,
@@ -383,10 +397,10 @@ function checkResultValid(testTree, giverType, receiverType, exchangeDataFromLas
     exchangeDataFromLastYear
   );
 
-  const expectedGivers = getPeopleOfType(giverType);
-  const expectedReceivers = getPeopleOfType(receiverType);
-  const actualGivers = result.result.map((exchange) => exchange.giver);
-  const actualReceivers = result.result.map((exchange) => exchange.receiver);
+  const expectedGivers = getPeopleOfType(giverType, dataToCheck);
+  const expectedReceivers = getPeopleOfType(receiverType, dataToCheck);
+  const actualGivers = result.result.map(exchange => exchange.giver);
+  const actualReceivers = result.result.map(exchange => exchange.receiver);
 
   const missingReceivers = arrayDiff(expectedReceivers, actualReceivers);
   const extraReceivers = arrayDiff(actualReceivers, expectedReceivers);
@@ -394,27 +408,34 @@ function checkResultValid(testTree, giverType, receiverType, exchangeDataFromLas
   const extraGivers = arrayDiff(actualGivers, expectedGivers);
 
   if (missingGivers.length) {
-    throw new Error("FAIL - missing givers " + JSON.stringify(missingGivers));
+    throw new Error("FAIL - missing givers " + JSON.stringify(missingGivers) + ".\nActual givers: " + JSON.stringify(actualGivers));
   }
   if (missingReceivers.length) {
-    throw new Error("FAIL - missing receivers " + JSON.stringify(missingReceivers));
+    throw new Error(
+      "FAIL - missing receivers " + JSON.stringify(missingReceivers)
+    );
   }
 
   if (extraGivers.length) {
     throw new Error("FAIL - extra givers " + JSON.stringify(extraGivers));
   }
   if (extraReceivers.length) {
-    if (!extraReceivers.every((receiver) => receiver === 'NO-ONE')) {
-      throw new Error("FAIL - extra receivers " + JSON.stringify(extraReceivers));
+    if (!extraReceivers.every(receiver => receiver === "NO-ONE")) {
+      throw new Error(
+        "FAIL - extra receivers " + JSON.stringify(extraReceivers)
+      );
     }
   }
   const hasRecursiveGiving = checkHasRecursiveGiving(result.result);
   if (hasRecursiveGiving) {
-    throw new Error('FAIL - has recursive giving ' + hasRecursiveGiving);
+    throw new Error("FAIL - has recursive giving " + hasRecursiveGiving);
   }
-  const hasRepeatGiving = checkHasRepeatGiving(result.result, exchangeDataFromLastYear);
+  const hasRepeatGiving = checkHasRepeatGiving(
+    result.result,
+    exchangeDataFromLastYear
+  );
   if (hasRepeatGiving) {
-    throw new Error('Has repeat giving' + JSON.stringify(result));
+    throw new Error("Has repeat giving" + JSON.stringify(result));
   }
 }
 
@@ -445,14 +466,113 @@ function checkHasRecursiveGiving(exchanges) {
   });
 }
 
+const oldGuardData = [
+  {
+    id: 21,
+    name: "Elaine",
+    partner: "",
+    family_member_type: "old guard",
+    parent_id: "root",
+    participating_this_year: "true"
+  },
+  {
+    id: 25,
+    name: "Peter",
+    partner: "Judy",
+    family_member_type: "old guard",
+    parent_id: "21",
+    participating_this_year: "true"
+  },
+  {
+    id: 23,
+    name: "Tricia",
+    partner: "Denis",
+    family_member_type: "old guard",
+    parent_id: "21",
+    participating_this_year: "true"
+  },
+  {
+    id: 27,
+    name: "Jess",
+    partner: "",
+    family_member_type: "old guard",
+    parent_id: "23",
+    participating_this_year: "true"
+  },
+  {
+    id: 29,
+    name: "Alice",
+    partner: "",
+    family_member_type: "old guard",
+    parent_id: "25",
+    participating_this_year: "true"
+  },
+  {
+    id: 31,
+    name: "Matt",
+    partner: "Karen",
+    family_member_type: "old guard",
+    parent_id: "25",
+    participating_this_year: "true"
+  },
+  {
+    id: 32,
+    name: "Jeremy",
+    partner: "Sandy",
+    family_member_type: "old guard",
+    parent_id: "25",
+    participating_this_year: "true"
+  }
+];
+
+const testTree2 = algo.compileTree(oldGuardData);
+
+function checkAllOldGuard() {
+  checkResultValid(testTree2, "old guard", "old guard", [], oldGuardData);
+}
+
+function checkSocialDistance2() {
+  const distanceTestCases = [
+    { giver: "Matt", receiver: "Jess", socialDistance: 2 },
+    { giver: "Alice", receiver: "Elaine", socialDistance: 4 },
+    { giver: "Tricia", receiver: "Judy", socialDistance: 4 },
+    { giver: "Jeremy", receiver: "Karen", socialDistance: 4 },
+    { giver: "Denis", receiver: "Alice", socialDistance: 8 },
+    { giver: "Jess", receiver: "Jeremy", socialDistance: 2 },
+    { giver: "Judy", receiver: "Peter", socialDistance: 0 },
+    { giver: "Karen", receiver: "Tricia", socialDistance: 8 },
+    { giver: "Peter", receiver: "Denis", socialDistance: 4 },
+    { giver: "Elaine", receiver: "Sandy", socialDistance: 16 },
+    { giver: "Sandy", receiver: "Matt", socialDistance: 4 }
+  ];
+
+  distanceTestCases.forEach(testCase => {
+    const socialDistance = algo.socialDistance(
+      testTree2,
+      testCase.giver,
+      testCase.receiver
+    );
+    if (socialDistance !== testCase.socialDistance) {
+      throw new Error(
+        "social distance fail!" +
+          JSON.stringify(testCase) +
+          "Actual: " +
+          socialDistance
+      );
+    }
+  });
+}
+
 function runTests() {
-  checkHasSharedParent();
-  checkIsParentOf();
-  checkTreeDepth();
-  checkDistanceCalculation();
-  checkResultValid(testTree, 'young adult', 'young adult', exchangeDataFromLastYearYoungAdults);
-  checkResultValid(testTree, 'old guard', 'old guard', exchangeDataFromLastYearAdults);
-  checkResultValid(testTree, 'old guard', 'kid', exchangeDataFromLastYearKids);
+  // checkAllOldGuard();
+  checkSocialDistance2();
+  // checkHasSharedParent();
+  // checkIsParentOf();
+  // checkTreeDepth();
+  // checkDistanceCalculation();
+  // checkResultValid(testTree, 'young adult', 'young adult', exchangeDataFromLastYearYoungAdults);
+  // checkResultValid(testTree, 'old guard', 'old guard', exchangeDataFromLastYearAdults);
+  // checkResultValid(testTree, 'old guard', 'kid', exchangeDataFromLastYearKids);
 
   console.log('All tests passed :)');
 }
