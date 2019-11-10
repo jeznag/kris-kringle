@@ -30,6 +30,7 @@ class AccountsController < ApplicationController
   # POST /accounts.json
   def create
     account_id = SecureRandom.base58(24)
+    puts "Account_id #{account_id}"
     @account = Account.new(account_params.merge({
       account_id: account_id
     }))
