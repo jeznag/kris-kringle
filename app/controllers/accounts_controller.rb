@@ -30,14 +30,14 @@ class AccountsController < ApplicationController
   # POST /accounts.json
   def create
     account_id = SecureRandom.base58(24)
-    puts "Account_id #{account_id}"
     @account = Account.new(account_params.merge({
       account_id: account_id
     }))
 
     respond_to do |format|
       if @account.save
-        AccountMailer.welcome_email(@account).deliver_later
+        # TODO fix mailer
+        # AccountMailer.welcome_email(@account).deliver_later
         format.html { redirect_to @account, notice: 'Account was successfully created.' }
         format.json { render :show, status: :created, location: @account }
       else
