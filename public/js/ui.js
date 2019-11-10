@@ -145,7 +145,7 @@ function addGenerateResultsListener() {
 }
 
 function showResults() {
-  if (exchangeDataFromThisYearKids.length && exchangeDataFromThisYearYoungAdults && exchangeDataFromThisYearAdults) {
+  if (exchangeDataFromThisYearKids.length || exchangeDataFromThisYearYoungAdults || exchangeDataFromThisYearAdults) {
     showResultsForThisYear();
   } else {
     displayNewSetOfResults();
