@@ -225,7 +225,7 @@ function getAllParticipatingPeopleInTree(tree, type) {
   return people;
 }
 
-const MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 2;
+const MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 4;
 
 function shuffleArray(arr) {
   const shuffledArray = arr.slice(0);
