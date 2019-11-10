@@ -14,7 +14,7 @@ async function updatePersonOnServer(nodeData, csrf) {
   delete updatedDataForServer.children;
   delete updatedDataForServer.participating;
 
-  const response = await fetch(`/family_members/${nodeData.ID}.json?account_id=${window.accountID}`, {
+  await fetch(`/family_members/${nodeData.ID}.json?account_id=${window.accountID}`, {
     method: 'PATCH',
     credentials: 'include',
     body: JSON.stringify({
@@ -22,7 +22,6 @@ async function updatePersonOnServer(nodeData, csrf) {
     }),
     headers,
   });
-  const body = await response.json();
 }
 
 async function fetchFamilyMemberData() {
@@ -38,7 +37,6 @@ async function fetchGiftExchangeData() {
 }
 
 async function addPerson(personData, csrf) {
-  debugger;
   const headers = new Headers();
   headers.append('X-CSRF-Token', csrf);
   headers.append('Content-Type', 'application/json');
