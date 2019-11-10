@@ -310,6 +310,11 @@ function swapRecipientsAround(exchanges, currentGiver, familyTree) {
     const distance = socialDistance(familyTree, currentGiver, exchange.receiver);
     return distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE;
   });
+
+  if (!exchangeToSwapWith) {
+    return false;
+  }
+
   const recipientToSwapAround = exchangeToSwapWith.receiver;
   exchangeToSwapWith.receiver = currentGiver;
   exchanges.push({
@@ -317,6 +322,8 @@ function swapRecipientsAround(exchanges, currentGiver, familyTree) {
     receiver: recipientToSwapAround,
     socialDistance: socialDistance(familyTree, currentGiver, recipientToSwapAround)
   });
+
+  return true;
 }
 
 /**
@@ -332,7 +339,11 @@ function swapRecipientsAround(exchanges, currentGiver, familyTree) {
  * @param  {Array<{giver: string, receiver: string}>} exchangeDataFromPreviousYear  Matches from previous year
  * @return {Array<{giver: string, receiver: string}>}  Best guess at matches
  */
-function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear) {
+function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts = 0) {
+  if (attempts > 1000) {
+    alert('Cannot figure out an optimal giving solution');
+    throw new Error('Aaargh');
+  }
   const exchanges = [];
   const numPossibleExchanges = treeDepth(familyTree);
 
@@ -341,6 +352,7 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
   let possibleGivers = shuffleArray(getAllParticipatingPeopleInTree(familyTree, typeGiver));
   let possibleRecipientsForThisGiver = possibleRecipients.slice(0);
   let currentGiver = possibleGivers[0];
+  let validTree = true;
   while (possibleGivers.length > 0) {
     possibleRecipientsForThisGiver.forEach((possibleRecipient, index) => {
       if (possibleRecipient === currentGiver) {
@@ -350,7 +362,11 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
         // The only possible recipient is the same person as the giver
         // Swap one of the other recipients for the current giver and then
         // the giver can give to the person they swapped with.
-        swapRecipientsAround(exchanges, currentGiver, familyTree);
+        const canSwap = swapRecipientsAround(exchanges, currentGiver, familyTree);
+        if (!canSwap) {
+          validTree = false;
+          break;
+        }
         const indexOfGiver = possibleGivers.indexOf(currentGiver);
         if (indexOfGiver !== -1) {
           possibleGivers.splice(indexOfGiver, 1);
@@ -441,7 +457,11 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
     }
   }
 
-  return exchanges;
+  if (validTree) {
+    return exchanges;
+  }
+
+  return generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts + 1);
 }
 
 const facade = {
