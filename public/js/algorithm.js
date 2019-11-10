@@ -225,7 +225,7 @@ function getAllParticipatingPeopleInTree(tree, type) {
   return people;
 }
 
-const MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 4;
+let MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 6;
 
 function shuffleArray(arr) {
   const shuffledArray = arr.slice(0);
@@ -341,6 +341,12 @@ function swapRecipientsAround(exchanges, currentGiver, familyTree) {
  */
 function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts = 0) {
   if (attempts > 1000) {
+    MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE -= 1;
+
+    if (MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE > 0) {
+      return generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, 0);
+    }
+
     alert('Cannot figure out an optimal giving solution');
     throw new Error('Aaargh');
   }
@@ -352,116 +358,115 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
   let possibleGivers = shuffleArray(getAllParticipatingPeopleInTree(familyTree, typeGiver));
   let possibleRecipientsForThisGiver = possibleRecipients.slice(0);
   let currentGiver = possibleGivers[0];
-  let validTree = true;
-  while (possibleGivers.length > 0) {
-    possibleRecipientsForThisGiver.forEach((possibleRecipient, index) => {
-      if (possibleRecipient === currentGiver) {
-        if (possibleRecipientsForThisGiver.length > 1) {
+  try {
+    while (possibleGivers.length > 0) {
+      possibleRecipientsForThisGiver.forEach((possibleRecipient, index) => {
+        if (possibleRecipient === currentGiver) {
+          if (possibleRecipientsForThisGiver.length > 1) {
+            return;
+          }
+          // The only possible recipient is the same person as the giver
+          // Swap one of the other recipients for the current giver and then
+          // the giver can give to the person they swapped with.
+          const canSwap = swapRecipientsAround(exchanges, currentGiver, familyTree);
+          if (!canSwap) {
+            throw new Error('Invalid combination');
+          }
+          const indexOfGiver = possibleGivers.indexOf(currentGiver);
+          if (indexOfGiver !== -1) {
+            possibleGivers.splice(indexOfGiver, 1);
+          }
+          const indexOfReceiver = possibleRecipients.indexOf(currentGiver);
+          if (indexOfReceiver !== -1) {
+            possibleRecipients.splice(indexOfReceiver, 1);
+          }
+          if (possibleGivers.length > 0) {
+            currentGiver = possibleGivers[0];
+            possibleRecipientsForThisGiver = possibleRecipients.slice(0);
+          }
           return;
         }
-        // The only possible recipient is the same person as the giver
-        // Swap one of the other recipients for the current giver and then
-        // the giver can give to the person they swapped with.
-        const canSwap = swapRecipientsAround(exchanges, currentGiver, familyTree);
-        if (!canSwap) {
-          validTree = false;
-          break;
-        }
-        const indexOfGiver = possibleGivers.indexOf(currentGiver);
-        if (indexOfGiver !== -1) {
-          possibleGivers.splice(indexOfGiver, 1);
-        }
-        const indexOfReceiver = possibleRecipients.indexOf(currentGiver);
-        if (indexOfReceiver !== -1) {
-          possibleRecipients.splice(indexOfReceiver, 1);
-        }
-        if (possibleGivers.length > 0) {
-          currentGiver = possibleGivers[0];
-          possibleRecipientsForThisGiver = possibleRecipients.slice(0);
-        }
-        return;
-      }
-      const distance = socialDistance(familyTree, currentGiver, possibleRecipient);
-      const personWhoIsBuyingForGiver = getExchangeForReceiver(exchanges, currentGiver);
-      const recursiveGiving = personWhoIsBuyingForGiver && personWhoIsBuyingForGiver.giver === possibleRecipient;
-      const exchangeFromLastYear = getExchangeForGiver(exchangeDataFromPreviousYear, currentGiver);
-      const boughtForSamePersonLastYear = exchangeFromLastYear && exchangeFromLastYear.receiver === possibleRecipient;
+        const distance = socialDistance(familyTree, currentGiver, possibleRecipient);
+        const personWhoIsBuyingForGiver = getExchangeForReceiver(exchanges, currentGiver);
+        const recursiveGiving = personWhoIsBuyingForGiver && personWhoIsBuyingForGiver.giver === possibleRecipient;
+        const exchangeFromLastYear = getExchangeForGiver(exchangeDataFromPreviousYear, currentGiver);
+        const boughtForSamePersonLastYear = exchangeFromLastYear && exchangeFromLastYear.receiver === possibleRecipient;
 
-      if (distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE && !recursiveGiving && !boughtForSamePersonLastYear) {
-        exchanges.push({
-          giver: currentGiver,
-          receiver: possibleRecipient,
-          socialDistance: distance
-        });
-        const indexOfReceiver = possibleRecipients.indexOf(possibleRecipient);
-        possibleRecipients.splice(indexOfReceiver, 1);
-        const indexOfGiver = possibleGivers.indexOf(currentGiver);
-        possibleGivers.splice(indexOfGiver, 1);
-
-        if (possibleGivers.length > 0) {
-          currentGiver = possibleGivers[0];
-          possibleRecipientsForThisGiver = possibleRecipients.slice(0);
-        }
-      } else {
-        // recipient is too close to giver. Take them off the list of possibilities.
-        const indexOfReceiver = possibleRecipientsForThisGiver.indexOf(possibleRecipient);
-        possibleRecipientsForThisGiver.splice(indexOfReceiver, 1);
-      }
-    });
-
-    if (!possibleRecipientsForThisGiver.length) {
-      const exchangeFromLastYear = getExchangeForGiver(exchangeDataFromPreviousYear, currentGiver);
-      const boughtForNoOneLastYear = !exchangeFromLastYear || exchangeFromLastYear.receiver === NO_RECIPIENT;
-
-      if (!boughtForNoOneLastYear) {
-        exchanges.push({
-          giver: currentGiver,
-          receiver: NO_RECIPIENT,
-          socialDistance: '?',
-        });
-      } else {
-        // don't want to buy for no-one two years in a row
-        // find someone who bought for someone last year and is buying for someone this year as well
-        const exchangeToSwapWith = exchanges.find((exchange) => {
-          if (exchange.receiver !== NO_RECIPIENT) {
-            return exchangeDataFromPreviousYear.find((exchangeToCheck) => {
-              return exchangeToCheck.giver === exchange.giver && exchange.receiver !== NO_RECIPIENT;
-            });
-          }
-        });
-
-        if (exchangeToSwapWith) {
-          const oldGiver = exchangeToSwapWith.giver;
-          exchangeToSwapWith.giver = currentGiver;
-          exchangeToSwapWith.socialDistance = socialDistance(familyTree, currentGiver, exchangeToSwapWith.receiver);
+        if (distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE && !recursiveGiving && !boughtForSamePersonLastYear) {
           exchanges.push({
-            giver: oldGiver,
-            receiver: NO_RECIPIENT,
-            socialDistance: '?'
+            giver: currentGiver,
+            receiver: possibleRecipient,
+            socialDistance: distance
           });
+          const indexOfReceiver = possibleRecipients.indexOf(possibleRecipient);
+          possibleRecipients.splice(indexOfReceiver, 1);
+          const indexOfGiver = possibleGivers.indexOf(currentGiver);
+          possibleGivers.splice(indexOfGiver, 1);
+
+          if (possibleGivers.length > 0) {
+            currentGiver = possibleGivers[0];
+            possibleRecipientsForThisGiver = possibleRecipients.slice(0);
+          }
         } else {
+          // recipient is too close to giver. Take them off the list of possibilities.
+          const indexOfReceiver = possibleRecipientsForThisGiver.indexOf(possibleRecipient);
+          possibleRecipientsForThisGiver.splice(indexOfReceiver, 1);
+        }
+      });
+
+      if (!possibleRecipientsForThisGiver.length) {
+        const exchangeFromLastYear = getExchangeForGiver(exchangeDataFromPreviousYear, currentGiver);
+        const boughtForNoOneLastYear = !exchangeFromLastYear || exchangeFromLastYear.receiver === NO_RECIPIENT;
+
+        if (!boughtForNoOneLastYear) {
           exchanges.push({
             giver: currentGiver,
             receiver: NO_RECIPIENT,
             socialDistance: '?',
           });
+        } else {
+          // don't want to buy for no-one two years in a row
+          // find someone who bought for someone last year and is buying for someone this year as well
+          const exchangeToSwapWith = exchanges.find((exchange) => {
+            if (exchange.receiver !== NO_RECIPIENT) {
+              return exchangeDataFromPreviousYear.find((exchangeToCheck) => {
+                return exchangeToCheck.giver === exchange.giver && exchange.receiver !== NO_RECIPIENT;
+              });
+            }
+          });
+
+          if (exchangeToSwapWith) {
+            const oldGiver = exchangeToSwapWith.giver;
+            exchangeToSwapWith.giver = currentGiver;
+            exchangeToSwapWith.socialDistance = socialDistance(familyTree, currentGiver, exchangeToSwapWith.receiver);
+            exchanges.push({
+              giver: oldGiver,
+              receiver: NO_RECIPIENT,
+              socialDistance: '?'
+            });
+          } else {
+            exchanges.push({
+              giver: currentGiver,
+              receiver: NO_RECIPIENT,
+              socialDistance: '?',
+            });
+          }
+        }
+        const indexOfGiver = possibleGivers.indexOf(currentGiver);
+        possibleGivers.splice(indexOfGiver, 1);
+
+        if (possibleGivers.length) {
+          currentGiver = possibleGivers[0];
+          possibleRecipientsForThisGiver = possibleRecipients.slice(0);
         }
       }
-      const indexOfGiver = possibleGivers.indexOf(currentGiver);
-      possibleGivers.splice(indexOfGiver, 1);
-
-      if (possibleGivers.length) {
-        currentGiver = possibleGivers[0];
-        possibleRecipientsForThisGiver = possibleRecipients.slice(0);
-      }
     }
+  } catch (e) {
+    // invalid combination - start again
+    return generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts + 1);
   }
 
-  if (validTree) {
-    return exchanges;
-  }
-
-  return generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, attempts + 1);
+  return exchanges;
 }
 
 const facade = {
