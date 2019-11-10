@@ -289,7 +289,7 @@ function arrayDiff(array1, array2) {
   return missingItems;
 }
 
-const MAX_ITERATIONS = 1000;
+const MAX_ITERATIONS = 10;
 /**
  * Generates matches. Performs a double check to make sure there is no repeat giving.
  */
@@ -304,6 +304,19 @@ function run(
   let iterations = 0;
   const startTime = new Date();
   let bestResult = { totalDistance: 0 };
+
+  const recipients = getAllParticipatingPeopleInTree(
+    familyTree,
+    typeReceiver
+  );
+
+  if (recipients.length === 0) {
+    return {
+      result: [],
+      iterations: 0,
+      executionTime: 0
+    };
+  }
 
   while (iterations < MAX_ITERATIONS) {
     MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 10;
