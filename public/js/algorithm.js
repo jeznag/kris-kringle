@@ -106,6 +106,10 @@ function hasSharedParent(tree, name1, name2) {
   const node1 = findNode(tree, name1);
   const node2 = findNode(tree, name2);
 
+  if (!node1 || !node2) {
+    return false;
+  }
+
   let parent1Node = findNodeByID(tree, node1.parent);
   let parent2Node = findNodeByID(tree, node2.parent);
 
