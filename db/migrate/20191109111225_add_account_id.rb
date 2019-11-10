@@ -1,4 +1,4 @@
-class AddAccountID < ActiveRecord::Migration
+class AddAccountID < ActiveRecord::Migration[5.1]
   def up
     change_column :accounts, :id, :primary_key
     change_column :gift_exchanges, :id, :primary_key
