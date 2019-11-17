@@ -260,37 +260,37 @@ function checkDistanceCalculation() {
     {
       person1: "Ruby Fleming",
       person2: "William Fleming",
-      expectedDistance: 0
+      expectedDistance: 2
     },
     {
       person1: "Ruby Fleming",
       person2: "Tim Fleming",
-      expectedDistance: 1
+      expectedDistance: 2
     },
     {
       person1: "Ruby Fleming",
       person2: "Jane Fleming",
-      expectedDistance: 1
+      expectedDistance: 2
     },
     {
       person1: "Ruby Fleming",
       person2: "Alice Nagel",
-      expectedDistance: 4
+      expectedDistance: 12
     },
     {
       person1: "William Fleming",
       person2: "Judy McGannon",
-      expectedDistance: 9
+      expectedDistance: 8
     },
     {
       person1: "Sandy Xu",
       person2: "Judy McGannon",
-      expectedDistance: 1
+      expectedDistance: 2
     },
     {
       person1: "Jeremy Nagel",
       person2: "Judy McGannon",
-      expectedDistance: 1
+      expectedDistance: 2
     },
     {
       person1: "Jeremy Nagel",
@@ -300,7 +300,7 @@ function checkDistanceCalculation() {
     {
       person1: "Jeremy Nagel",
       person2: "Alice Nagel",
-      expectedDistance: 0
+      expectedDistance: 2
     },
     {
       person1: "Elena McGannon",
@@ -315,12 +315,12 @@ function checkDistanceCalculation() {
     {
       person1: "Claire McGannon",
       person2: "Alice Nagel",
-      expectedDistance: 4
+      expectedDistance: 19
     },
     {
       person1: "Matt (Elena BF)",
       person2: "Alice Nagel",
-      expectedDistance: 9
+      expectedDistance: 21
     },
     {
       person1: "Judy McGannon",
@@ -330,7 +330,7 @@ function checkDistanceCalculation() {
     {
       person1: "Judy McGannon",
       person2: "Jane Fleming",
-      expectedDistance: 4
+      expectedDistance: 2
     },
     {
       person1: "Tim Fleming",
@@ -533,17 +533,17 @@ function checkAllOldGuard() {
 
 function checkSocialDistance2() {
   const distanceTestCases = [
-    { giver: "Matt", receiver: "Jess", socialDistance: 2 },
-    { giver: "Alice", receiver: "Elaine", socialDistance: 4 },
-    { giver: "Tricia", receiver: "Judy", socialDistance: 4 },
-    { giver: "Jeremy", receiver: "Karen", socialDistance: 4 },
+    { giver: "Matt", receiver: "Jess", socialDistance: 9 },
+    { giver: "Alice", receiver: "Elaine", socialDistance: 2 },
+    { giver: "Tricia", receiver: "Judy", socialDistance: 7 },
+    { giver: "Jeremy", receiver: "Karen", socialDistance: 6 },
     { giver: "Denis", receiver: "Alice", socialDistance: 8 },
-    { giver: "Jess", receiver: "Jeremy", socialDistance: 2 },
+    { giver: "Jess", receiver: "Jeremy", socialDistance: 10 },
     { giver: "Judy", receiver: "Peter", socialDistance: 0 },
-    { giver: "Karen", receiver: "Tricia", socialDistance: 8 },
-    { giver: "Peter", receiver: "Denis", socialDistance: 4 },
-    { giver: "Elaine", receiver: "Sandy", socialDistance: 16 },
-    { giver: "Sandy", receiver: "Matt", socialDistance: 4 }
+    { giver: "Karen", receiver: "Tricia", socialDistance: 9 },
+    { giver: "Peter", receiver: "Denis", socialDistance: 7 },
+    { giver: "Elaine", receiver: "Sandy", socialDistance: 5 },
+    { giver: "Sandy", receiver: "Matt", socialDistance: 6 }
   ];
 
   distanceTestCases.forEach(testCase => {
@@ -564,15 +564,14 @@ function checkSocialDistance2() {
 }
 
 function runTests() {
-  // checkAllOldGuard();
+  checkAllOldGuard();
   checkSocialDistance2();
-  // checkHasSharedParent();
-  // checkIsParentOf();
-  // checkTreeDepth();
-  // checkDistanceCalculation();
-  // checkResultValid(testTree, 'young adult', 'young adult', exchangeDataFromLastYearYoungAdults);
-  // checkResultValid(testTree, 'old guard', 'old guard', exchangeDataFromLastYearAdults);
-  // checkResultValid(testTree, 'old guard', 'kid', exchangeDataFromLastYearKids);
+  checkIsParentOf();
+  checkTreeDepth();
+  checkDistanceCalculation();
+  checkResultValid(testTree, 'young adult', 'young adult', exchangeDataFromLastYearYoungAdults);
+  checkResultValid(testTree, 'old guard', 'old guard', exchangeDataFromLastYearAdults);
+  checkResultValid(testTree, 'old guard', 'kid', exchangeDataFromLastYearKids);
 
   console.log('All tests passed :)');
 }

@@ -84,6 +84,55 @@ function treeDepth(tree) {
   return count;
 }
 
+function getDistanceFromRoot(tree, name) {
+  let count = 0;
+  let found = false;
+  bfs(tree, node => {
+    if (!found) {
+      if (node.name !== name && node.partner !== name) {
+        count += 1;
+      }
+
+      if (node.name === name) {
+        count += 1;
+        found = true;
+      }
+
+      if (node.partner === name) {
+        count += 2;
+        found = true;
+      }
+    }
+  });
+  return count;
+}
+
+function nodeContainsName(nodeToCheck, nameToFind) {
+  let containsName = false;
+  dfs(nodeToCheck, nodeBeingVisited => {
+    if (nodeBeingVisited.name === nameToFind || nodeBeingVisited.partner === nameToFind) {
+      containsName = true;
+    }
+  });
+
+  return containsName;
+}
+
+function getLowestCommonAncestor(tree, name1, name2) {
+  let deepestNode = { depth: -1, node: tree };
+  dfs(tree, nodeBeingVisited => {
+    if (nodeContainsName(nodeBeingVisited, name1) && nodeContainsName(nodeBeingVisited, name2)) {
+      const depth = getDepthOfPerson(tree, nodeBeingVisited.name, 0);
+
+      if (deepestNode.depth < depth) {
+        deepestNode = { node: nodeBeingVisited, depth };
+      }
+    }
+  });
+
+  return deepestNode.node;
+}
+
 function getDepthOfPerson(tree, name, currentDepth) {
   if (tree.children) {
     if (hasChildWithName(tree, name)) {
@@ -101,37 +150,6 @@ function getDepthOfPerson(tree, name, currentDepth) {
     return result;
   }
   return -1;
-}
-
-// todo - this needs to handle grandparents
-function hasSharedParent(tree, name1, name2) {
-  const node1 = findNode(tree, name1);
-  const node2 = findNode(tree, name2);
-
-  if (node1.partner === name1 || node2.partner === name2) {
-    // not going to have shared parents if they're partners (unless they married their sibling :O)
-    return false;
-  }
-
-  if (!node1 || !node2) {
-    return false;
-  }
-
-  let parent1Node = findNodeByID(tree, node1.parent);
-  let parent2Node = findNodeByID(tree, node2.parent);
-
-  if (parent1Node && parent1Node.type === "root") {
-    parent1Node = node1;
-  }
-  if (parent2Node && parent2Node.type === "root") {
-    parent2Node = node2;
-  }
-
-  return (
-    parent1Node.name === parent2Node.name ||
-    isParentOf(tree, parent1Node.name, parent2Node.name) ||
-    isParentOf(tree, parent2Node.name, parent1Node.name)
-  );
 }
 
 function findNode(tree, name) {
@@ -168,7 +186,7 @@ function hasChildWithName(node, name) {
     return false;
   }
   return node.children.some(
-    child => child.name === name || child.partner === name
+    child => child.name === name
   );
 }
 
@@ -180,6 +198,22 @@ function arePartners(tree, person1, person2) {
   );
 }
 
+function areSiblings(tree, person1, person2) {
+  const node1 = findNode(tree, person1);
+
+  if (node1.partner === person1) {
+    return false;
+  }
+
+  const parent = findNodeByID(tree, node1.parent);
+
+  return parent.children.find((child) => child.name === person2);
+}
+
+function areParentChild(tree, person1, person2) {
+  return isParentOf(tree, person1, person2) || isParentOf(tree, person2, person1);
+}
+
 function socialDistance(tree, person1, person2) {
   if (!person1 || !person2) {
     return 0;
@@ -189,31 +223,23 @@ function socialDistance(tree, person1, person2) {
     return 0;
   }
 
-  const depthPerson1 = Math.pow(getDepthOfPerson(tree, person1, 1), 1);
-  const depthPerson2 = Math.pow(getDepthOfPerson(tree, person2, 1), 1);
-
-  if (
-    isParentOf(tree, person1, person2) ||
-    isParentOf(tree, person2, person1)
-  ) {
-    return Math.abs(depthPerson1 - depthPerson2);
+  if (areSiblings(tree, person1, person2)) {
+    return 2;
   }
 
-  if (hasSharedParent(tree, person1, person2)) {
-    if (depthPerson1 + depthPerson2 === 2) {
-      // top level adults can buy for each other
-      return 3;
-    }
-
-    if (!areBloodRelatives(tree, person1, person2)) {
-      return 4;
-    }
-
-    return Math.pow(2, Math.abs(depthPerson1 - depthPerson2));
+  if (areParentChild(tree, person1, person2)) {
+    return 2;
   }
 
-  const baseDistance = areBloodRelatives(tree, person1, person2) ? 1 : 2;
-  return Math.pow(2, baseDistance + Math.abs(depthPerson1 - depthPerson2));
+  const distanceFromRoot1 = getDistanceFromRoot(tree, person1);
+  const distanceFromRoot2 = getDistanceFromRoot(tree, person2);
+  const lowestCommonAncestor = getLowestCommonAncestor(tree, person1, person2);
+  if (!lowestCommonAncestor) {
+    return 99;
+  }
+  const ancestorDistanceFromRoot = getDistanceFromRoot(tree, lowestCommonAncestor.name);
+
+  return distanceFromRoot1 + distanceFromRoot2 - 2 * ancestorDistanceFromRoot;
 }
 
 function areBloodRelatives(tree, person1, person2) {
@@ -318,7 +344,9 @@ function run(
     };
   }
 
-  while (iterations < MAX_ITERATIONS) {
+  const MAX_DURATION = 10000;
+
+  while (iterations < MAX_ITERATIONS && (new Date() - startTime) < MAX_DURATION) {
     MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 10;
     result = generateMatches(
       familyTree,
@@ -326,6 +354,7 @@ function run(
       typeReceiver,
       exchangeDataFromPreviousYear
     );
+
     iterations++;
     const possibleRecipients = getAllParticipatingPeopleInTree(
       familyTree,
@@ -370,8 +399,6 @@ function run(
       );
 
       if (totalDistance > bestResult.totalDistance) {
-        console.log("totalDistance", totalDistance);
-        console.log(result);
         bestResult = {
           totalDistance,
           exchanges: result
@@ -383,8 +410,7 @@ function run(
   const finishTime = new Date();
   const executionTime = finishTime - startTime;
 
-  console.log('Best Result');
-  console.log(bestResult);
+  console.log('executionTime', executionTime);
 
   if (!bestResult.totalDistance) {
     return {
@@ -446,8 +472,9 @@ function generateMatches(
   let possibleRecipientsForThisGiver = possibleRecipients.slice(0);
   let currentGiver = possibleGivers[0];
   try {
-    while (possibleGivers.length > 0) {
+    while (possibleGivers.length > 0 && possibleRecipientsForThisGiver.length > 0) {
       possibleRecipientsForThisGiver.forEach((possibleRecipient, index) => {
+
         if (possibleRecipient === currentGiver) {
           if (possibleRecipientsForThisGiver.length > 1) {
             return;
@@ -506,6 +533,16 @@ function generateMatches(
         throw new Error("Bad result. Try again");
       }
     }
+
+    if (possibleGivers.length > 0 && possibleRecipients.length === 0) {
+      possibleGivers.forEach((giver) => {
+        exchanges.push({
+          giver,
+          receiver: NO_RECIPIENT,
+          socialDistance: -1
+        });
+      });
+    }
   } catch (e) {
     // invalid combination - start again
     return generateMatches(
@@ -527,7 +564,6 @@ const facade = {
   treeDepth,
   socialDistance,
   getDepthOfPerson,
-  hasSharedParent,
   isParentOf,
   compileTree,
   addChildToNode,
