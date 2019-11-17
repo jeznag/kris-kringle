@@ -99,7 +99,7 @@ function getDistanceFromRoot(tree, name) {
       }
 
       if (node.partner === name) {
-        count += 2;
+        count += 5;
         found = true;
       }
     }

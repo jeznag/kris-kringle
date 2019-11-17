@@ -285,7 +285,7 @@ function checkDistanceCalculation() {
     {
       person1: "Sandy Xu",
       person2: "Judy McGannon",
-      expectedDistance: 2
+      expectedDistance: 5
     },
     {
       person1: "Jeremy Nagel",
@@ -310,7 +310,7 @@ function checkDistanceCalculation() {
     {
       person1: "Claire McGannon",
       person2: "Matt (Elena BF)",
-      expectedDistance: 4
+      expectedDistance: 7
     },
     {
       person1: "Claire McGannon",
@@ -320,7 +320,7 @@ function checkDistanceCalculation() {
     {
       person1: "Matt (Elena BF)",
       person2: "Alice Nagel",
-      expectedDistance: 21
+      expectedDistance: 24
     },
     {
       person1: "Judy McGannon",
@@ -535,15 +535,15 @@ function checkSocialDistance2() {
   const distanceTestCases = [
     { giver: "Matt", receiver: "Jess", socialDistance: 9 },
     { giver: "Alice", receiver: "Elaine", socialDistance: 2 },
-    { giver: "Tricia", receiver: "Judy", socialDistance: 7 },
-    { giver: "Jeremy", receiver: "Karen", socialDistance: 6 },
-    { giver: "Denis", receiver: "Alice", socialDistance: 8 },
+    { giver: "Tricia", receiver: "Judy", socialDistance: 10 },
+    { giver: "Jeremy", receiver: "Karen", socialDistance: 9 },
+    { giver: "Denis", receiver: "Alice", socialDistance: 11 },
     { giver: "Jess", receiver: "Jeremy", socialDistance: 10 },
     { giver: "Judy", receiver: "Peter", socialDistance: 0 },
-    { giver: "Karen", receiver: "Tricia", socialDistance: 9 },
-    { giver: "Peter", receiver: "Denis", socialDistance: 7 },
-    { giver: "Elaine", receiver: "Sandy", socialDistance: 5 },
-    { giver: "Sandy", receiver: "Matt", socialDistance: 6 }
+    { giver: "Karen", receiver: "Tricia", socialDistance: 12 },
+    { giver: "Peter", receiver: "Denis", socialDistance: 10 },
+    { giver: "Elaine", receiver: "Sandy", socialDistance: 8 },
+    { giver: "Sandy", receiver: "Matt", socialDistance: 9 }
   ];
 
   distanceTestCases.forEach(testCase => {

@@ -220,7 +220,7 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
         <tr>
           <th>Giver</th>
           <th>Receiver</th>
-          <th>Social Distance</th>
+          <th>Genetic Distance</th>
         </tr>
       </thead>
       <tbody>
