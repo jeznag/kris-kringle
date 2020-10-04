@@ -84,7 +84,7 @@ function renderInputs(node, parentEl, indexInFamily) {
         </div>
         <div class="input-group">
           <label for="${node.ID}-participating" class="inline-block">Participating?</label>
-          <input id="${node.ID}-participating" type="checkbox" data-type="participating" ${node.participating ? 'checked' : ''}>${inputsDisabled ? 'checked' : ''} />
+          <input id="${node.ID}-participating" type="checkbox" data-type="participating" value="${node.participating ? 'checked' : ''}" />
         </div>
         <div class="margin-top-xs">
           ${buttons}
