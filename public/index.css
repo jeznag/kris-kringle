@@ -20,7 +20,8 @@ body, input, button {
   border: 1px solid black;
   height: 13rem;
   padding: 1rem;
-  width: 9rem;
+  min-width: 9rem;
+  max-width: 14rem;
 }
 
 .input-wrapper[data-disabled="disabled"] {

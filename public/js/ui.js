@@ -54,6 +54,7 @@ function renderInputs(node, parentEl, indexInFamily) {
   let newWrapperEl = parentEl;
   const containerEl = document.querySelector('#tree');
   const inputsDisabled = containerEl.getAttribute('data-disabled') === 'true' ? 'disabled' : '';
+  const elementName = inputsDisabled ? 'span' : 'input';
   if (node.name !== 'root') {
     const depth = algo.getDepthOfPerson(compiledTree, node.name, 1);
     newWrapperEl = document.createElement('div');
@@ -67,11 +68,11 @@ function renderInputs(node, parentEl, indexInFamily) {
       <div class="input-wrapper" data-disabled="${inputsDisabled}">
         <div class="input-group">
           <label for="${node.ID}-name">Name</label>
-          <input ${inputsDisabled} id="${node.ID}-name" data-type="name" type="text" value="${node.name || ''}" />
+          <${elementName} id="${node.ID}-name" data-type="name" type="text" value="${node.name || ''}">${inputsDisabled ? node.name : ''}</${elementName}>
         </div>
         <div class="input-group">
           <label for="${node.ID}-partner">Partner</label>
-          <input ${inputsDisabled} id="${node.ID}-partner" type="text" data-type="partner" value="${node.partner || ''}" />
+          <${elementName} id="${node.ID}-partner" type="text" data-type="partner" value="${node.partner || ''}">${inputsDisabled ? node.partner : ''}</${elementName}>
         </div>
         <div class="input-group">
           <label for="${node.ID}-type">Type</label>
@@ -83,7 +84,7 @@ function renderInputs(node, parentEl, indexInFamily) {
         </div>
         <div class="input-group">
           <label for="${node.ID}-participating" class="inline-block">Participating?</label>
-          <input ${inputsDisabled} id="${node.ID}-participating" type="checkbox" data-type="participating" ${node.participating ? 'checked' : ''} />
+          <input id="${node.ID}-participating" type="checkbox" data-type="participating" ${node.participating ? 'checked' : ''}>${inputsDisabled ? 'checked' : ''} />
         </div>
         <div class="margin-top-xs">
           ${buttons}
