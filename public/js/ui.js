@@ -220,6 +220,7 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
         <tr>
           <th>Giver</th>
           <th>Receiver</th>
+          <th>Social Distance</th>
           <th>Genetic Distance</th>
         </tr>
       </thead>
@@ -230,6 +231,7 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
               <tr>
                 <td data-giver="${result.giver.toLowerCase()}">${result.giver}</td>
                 <td data-receiver="${result.receiver.toLowerCase()}">${result.receiver}</td>
+                <td>1.5 m</td>
                 <td>${result.socialDistance}</td>
               </tr>
             `;
