@@ -21,7 +21,11 @@ body, input, button {
   height: 13rem;
   padding: 1rem;
   min-width: 9rem;
-  max-width: 14rem;
+  max-width: 17rem;
+}
+
+label {
+  font-weight: bold;
 }
 
 .input-wrapper[data-disabled="disabled"] {
