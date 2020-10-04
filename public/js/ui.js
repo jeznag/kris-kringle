@@ -76,11 +76,15 @@ function renderInputs(node, parentEl, indexInFamily) {
         </div>
         <div class="input-group">
           <label for="${node.ID}-type">Type</label>
-          <select ${inputsDisabled} id="${node.ID}-type" type="text" data-type="type" value="${node.type || ''}">
-            <option ${node.type === 'kid' ? 'selected' : ''} value="kid">Kid</option>
-            <option ${node.type === 'young adult' ? 'selected' : ''} value="young adult">Young Adult</option>
-            <option ${node.type === 'old guard' ? 'selected' : ''} value="old guard">Old Guard</option>
-          </select>
+          ${inputsDisabled ?
+          `<span>${node.type}</span>` :
+          `
+            <select ${inputsDisabled} id="${node.ID}-type" type="text" data-type="type" value="${node.type || ''}">
+              <option ${node.type === 'kid' ? 'selected' : ''} value="kid">Kid</option>
+              <option ${node.type === 'young adult' ? 'selected' : ''} value="young adult">Young Adult</option>
+              <option ${node.type === 'old guard' ? 'selected' : ''} value="old guard">Old Guard</option>
+            </select>
+          `}
         </div>
         <div class="input-group">
           <label for="${node.ID}-participating" class="inline-block">Participating?</label>
