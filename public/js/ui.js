@@ -236,7 +236,7 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
               <tr>
                 <td data-giver="${result.giver.toLowerCase()}">${result.giver}</td>
                 <td data-receiver="${result.receiver.toLowerCase()}">${result.receiver}</td>
-                <td>1.5 m</td>
+                <td>Hugs and handshake permitted</td>
                 <td>${result.socialDistance}</td>
               </tr>
             `;
