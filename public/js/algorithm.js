@@ -11,13 +11,27 @@ function compileTree(jsonData) {
     children: oldGuard
   };
 
+  const unmatchedFamilyMembers = [];
+
   jsonData.forEach(familyMember => {
     if (familyMember.parent_id) {
       const parent = findNodeByID(outputTree, familyMember.parent_id);
       if (parent) {
         parent.children.push(compileNode(familyMember));
       } else {
-        debugger;
+        unmatchedFamilyMembers.push(familyMember);
+      }
+    }
+  });
+
+  // try again with unmatched
+  unmatchedFamilyMembers.forEach(familyMember => {
+    if (familyMember.parent_id) {
+      const parent = findNodeByID(outputTree, familyMember.parent_id);
+      if (parent) {
+        parent.children.push(compileNode(familyMember));
+      } else {
+        debugger
       }
     }
   });
