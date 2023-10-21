@@ -219,13 +219,44 @@ function addButtonToSaveResults(resultForKids, resultForYoungAdults, resultForAd
   });
 }
 
+function levenshteinDistance(str1, str2) {
+  // Create a matrix to store the distances
+  const matrix = Array(str1.length + 1)
+    .fill(null)
+    .map(() => Array(str2.length + 1).fill(null));
+
+  // Initialize the matrix
+  for (let i = 0; i <= str1.length; i++) {
+    matrix[i][0] = i;
+  }
+
+  for (let j = 0; j <= str2.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Fill in the matrix using the Levenshtein algorithm
+  for (let i = 1; i <= str1.length; i++) {
+    for (let j = 1; j <= str2.length; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  // The final value in the matrix is the Levenshtein distance
+  return matrix[str1.length][str2.length];
+}
+
 function generateResultsHTML(results, resultType, iterations, executionTime) {
   const tableHTML = `<table>
       <thead>
         <tr>
           <th>Giver</th>
           <th>Receiver</th>
-          <th>Social Distance</th>
+          <th>Levenshtein distance</th>
           <th>Genetic Distance</th>
         </tr>
       </thead>
@@ -236,7 +267,7 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
               <tr>
                 <td data-giver="${result.giver.toLowerCase()}">${result.giver}</td>
                 <td data-receiver="${result.receiver.toLowerCase()}">${result.receiver}</td>
-                <td>Hugs and handshake permitted</td>
+                <td>${levenshteinDistance(result.giver, result.receiver).toFixed(2)}</td>
                 <td>${result.socialDistance}</td>
               </tr>
             `;
