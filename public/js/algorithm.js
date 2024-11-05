@@ -338,6 +338,19 @@ function areNamesSimilar(name1, name2, threshold = 3) {
 // Main function to check for repeat giving
 function checkNoRepeatGiving(thisYearExchanges, lastYearExchanges) {
   return thisYearExchanges.every(exchange => {
+    lastYearExchanges.find(exchangeToCheck => {
+      const giverSimilar = areNamesSimilar(exchange.giver, exchangeToCheck.giver);
+
+      // Log both records for comparison if the giver matches
+      if (giverSimilar) {
+        console.log(`  [Same Giver Found] This year: ${exchange.giver} -> ${exchange.receiver}`);
+        console.log(`                       Last year: ${exchangeToCheck.giver} -> ${exchangeToCheck.receiver}`);
+      }
+
+      return giverSimilar;
+    });
+
+
     const hasRepeatGivingThisYear =
       thisYearExchanges.filter(
         exchangeToCheck => areNamesSimilar(exchangeToCheck.giver, exchange.giver)
