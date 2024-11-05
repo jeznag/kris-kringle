@@ -4,12 +4,12 @@ threads threads_count, threads_count
 
 preload_app!
 
-rackup      DefaultRackup
 port        ENV['PORT']     || 3000
-environment ENV['RACK_ENV'] || 'development'
+environment ENV['RAILS_ENV'] || 'development'
+
+pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 
 on_worker_boot do
-  # Worker specific setup for Rails 4.1+
-  # See: https://devcenter.heroku.com/articles/deploying-rails-applications-with-the-puma-web-server#on-worker-boot
-  ActiveRecord::Base.establish_connection
+  # Worker-specific setup for Rails 4.1+
+  ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
 end
