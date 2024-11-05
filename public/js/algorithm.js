@@ -292,17 +292,63 @@ function shuffleArray(arr) {
   return shuffledArray.sort((a, b) => (Math.random() > 0.5 ? -1 : 1));
 }
 
+// List of honorifics and descriptors to remove
+const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot", "Long Bready Hair", 'Seneschal'];
+
+// Function to clean a name by removing honorifics
+function cleanName(name) {
+  let cleanedName = name;
+  honorifics.forEach(honorific => {
+    const regex = new RegExp(`\\b${honorific}\\b`, 'gi');
+    cleanedName = cleanedName.replace(regex, '').trim();
+  });
+  return cleanedName.replace(/\s+/g, ' '); // remove extra spaces
+}
+
+// Existing Levenshtein distance function
+function levenshteinDistance(str1, str2) {
+  const dp = Array(str1.length + 1)
+    .fill(null)
+    .map(() => Array(str2.length + 1).fill(null));
+
+  for (let i = 0; i <= str1.length; i += 1) dp[i][0] = i;
+  for (let j = 0; j <= str2.length; j += 1) dp[0][j] = j;
+
+  for (let i = 1; i <= str1.length; i += 1) {
+    for (let j = 1; j <= str2.length; j += 1) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1, // Deletion
+        dp[i][j - 1] + 1, // Insertion
+        dp[i - 1][j - 1] + cost // Substitution
+      );
+    }
+  }
+  return dp[str1.length][str2.length];
+}
+
+// Function to check if two names are similar based on a threshold
+function areNamesSimilar(name1, name2, threshold = 3) {
+  const cleanedName1 = cleanName(name1);
+  const cleanedName2 = cleanName(name2);
+  const distance = levenshteinDistance(cleanedName1, cleanedName2);
+  return distance <= threshold; // Adjust threshold as needed
+}
+
+// Main function to check for repeat giving
 function checkNoRepeatGiving(thisYearExchanges, lastYearExchanges) {
   return thisYearExchanges.every(exchange => {
     const hasRepeatGivingThisYear =
       thisYearExchanges.filter(
-        exchangeToCheck => exchangeToCheck.giver === exchange.giver
+        exchangeToCheck => areNamesSimilar(exchangeToCheck.giver, exchange.giver)
       ).length > 1;
 
     const gaveToSamePersonLastYear = lastYearExchanges.find(
       exchangeToCheck =>
-        JSON.stringify(exchange) === JSON.stringify(exchangeToCheck)
+        areNamesSimilar(exchange.giver, exchangeToCheck.giver) &&
+        areNamesSimilar(exchange.receiver, exchangeToCheck.receiver)
     );
+
     return !gaveToSamePersonLastYear && !hasRepeatGivingThisYear;
   });
 }
