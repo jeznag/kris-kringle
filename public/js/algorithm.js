@@ -265,11 +265,11 @@ function areBloodRelatives(tree, person1, person2) {
 }
 
 function getExchangeForGiver(exchanges, giverName) {
-  return exchanges.find(exchange => exchange.giver === giverName);
+  return exchanges.find(exchange => areNamesSimilar(exchange.giver, giverName));
 }
 
 function getExchangeForReceiver(exchanges, receiverName) {
-  return exchanges.find(exchange => exchange.receiver === receiverName);
+  return exchanges.find(exchange => areNamesSimilar(exchange.receiver, receiverName));
 }
 
 function getAllParticipatingPeopleInTree(tree, type) {
@@ -338,18 +338,23 @@ function areNamesSimilar(name1, name2, threshold = 3) {
 // Main function to check for repeat giving
 function checkNoRepeatGiving(thisYearExchanges, lastYearExchanges) {
   return thisYearExchanges.every(exchange => {
+    let foundLastYearMatch = null;
     lastYearExchanges.find(exchangeToCheck => {
       const giverSimilar = areNamesSimilar(exchange.giver, exchangeToCheck.giver);
 
       // Log both records for comparison if the giver matches
       if (giverSimilar) {
-        console.log(`  [Same Giver Found] This year: ${exchange.giver} -> ${exchange.receiver}`);
-        console.log(`                       Last year: ${exchangeToCheck.giver} -> ${exchangeToCheck.receiver}`);
+        foundLastYearMatch = true;
+        // console.log(`  [Same Giver Found] This year: ${exchange.giver} -> ${exchange.receiver}`);
+        // console.log(`                       Last year: ${exchangeToCheck.giver} -> ${exchangeToCheck.receiver}`);
       }
 
       return giverSimilar;
     });
 
+    if (!foundLastYearMatch) {
+      console.log('No match found for', exchange.giver);
+    }
 
     const hasRepeatGivingThisYear =
       thisYearExchanges.filter(
@@ -572,7 +577,7 @@ function generateMatches(
         );
         const boughtForSamePersonLastYear =
           exchangeFromLastYear &&
-          exchangeFromLastYear.receiver === possibleRecipient;
+          areNamesSimilar(exchangeFromLastYear.receiver, possibleRecipient);
 
         if (
           distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE &&
@@ -582,7 +587,8 @@ function generateMatches(
           exchanges.push({
             giver: currentGiver,
             receiver: possibleRecipient,
-            socialDistance: distance
+            socialDistance: distance,
+            exchangeFromLastYear
           });
           const indexOfReceiver = possibleRecipients.indexOf(possibleRecipient);
           possibleRecipients.splice(indexOfReceiver, 1);

@@ -258,6 +258,7 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
           <th>Receiver</th>
           <th>Levenshtein distance</th>
           <th>Genetic Distance</th>
+          <th>Gave to last year</th>
         </tr>
       </thead>
       <tbody>
@@ -269,6 +270,7 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
                 <td data-receiver="${result.receiver.toLowerCase()}">${result.receiver}</td>
                 <td>${levenshteinDistance(result.giver, result.receiver).toFixed(2)}</td>
                 <td>${result.socialDistance}</td>
+                <td>${result.exchangeFromLastYear?.receiver}</td>
               </tr>
             `;
           }).join('')
