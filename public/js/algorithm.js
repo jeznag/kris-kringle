@@ -297,7 +297,7 @@ const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot"
   "Emissary", "Greenhand", "Life Bringer", "Herald", "Custodian", "Gearsmith",
   "Vizier", "Knight", "Physician", "Charioteer", "Iron Warrior", "Field Defender",
   "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary",
-  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist"];
+  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess"];
 
 // Function to clean a name by removing honorifics
 function cleanName(name) {
@@ -333,6 +333,20 @@ function levenshteinDistance(str1, str2) {
 
 // Function to check if two names are similar based on a threshold
 function areNamesSimilar(name1, name2, threshold = 3) {
+  const NAME_CHANGES_HARD_TO_FIND = [
+    { oldName: 'Sist', newName: 'Tilly' },
+    { oldName: 'Seneschal Krste Sekulovski', newName: 'Cartographer' },
+    { oldName: 'Seneschal Ash', newName: 'Swift healer' }
+  ]
+
+  const specialCaseResult = NAME_CHANGES_HARD_TO_FIND.find((nameData) => {
+    return (name1.includes(nameData.oldName) && name2.includes(nameData.newName)) ||
+      (name2.includes(nameData.oldName) && name1.includes(nameData.newName));
+  })
+  if (specialCaseResult) {
+    return true;
+  }
+
   const cleanedName1 = cleanName(name1);
   const cleanedName2 = cleanName(name2);
   const distance = levenshteinDistance(cleanedName1, cleanedName2);
