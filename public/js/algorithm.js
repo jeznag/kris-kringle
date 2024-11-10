@@ -293,7 +293,11 @@ function shuffleArray(arr) {
 }
 
 // List of honorifics and descriptors to remove
-const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot", "Long Bready Hair", 'Seneschal'];
+const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot", "Long Bready Hair", 'Seneschal', 'Scholar', 'Merchant', "Bloodletter", "Healer", "Low Physician", "Sentinel", "Warden", "Castellan",
+  "Emissary", "Greenhand", "Life Bringer", "Herald", "Custodian", "Gearsmith",
+  "Vizier", "Knight", "Physician", "Charioteer", "Iron Warrior", "Field Defender",
+  "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary",
+  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist"];
 
 // Function to clean a name by removing honorifics
 function cleanName(name) {
@@ -588,7 +592,9 @@ function generateMatches(
             giver: currentGiver,
             receiver: possibleRecipient,
             socialDistance: distance,
-            exchangeFromLastYear
+            exchangeFromLastYear,
+            giver_id: findNode(currentGiver).id,
+            receiver_id: findNode(possibleRecipient).id
           });
           const indexOfReceiver = possibleRecipients.indexOf(possibleRecipient);
           possibleRecipients.splice(indexOfReceiver, 1);
@@ -633,6 +639,7 @@ function generateMatches(
     );
   }
 
+  debugger
   return exchanges;
 }
 

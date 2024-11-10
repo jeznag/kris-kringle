@@ -192,6 +192,8 @@ function addButtonToSaveResults(resultForKids, resultForYoungAdults, resultForAd
         receiver_type: 'kid',
         giver_name: exchange.giver,
         receiver_name: exchange.receiver,
+        giver_id: exchange.giver_id,
+        receiver_id: exchange.receiver_id,
         social_distance: exchange.socialDistance,
       });
     });
@@ -202,6 +204,8 @@ function addButtonToSaveResults(resultForKids, resultForYoungAdults, resultForAd
         receiver_type: 'young adult',
         giver_name: exchange.giver,
         receiver_name: exchange.receiver,
+        giver_id: exchange.giver_id,
+        receiver_id: exchange.receiver_id,
         social_distance: exchange.socialDistance,
       });
     });
@@ -212,6 +216,8 @@ function addButtonToSaveResults(resultForKids, resultForYoungAdults, resultForAd
         receiver_type: 'old guard',
         giver_name: exchange.giver,
         receiver_name: exchange.receiver,
+        giver_id: exchange.giver_id,
+        receiver_id: exchange.receiver_id,
         social_distance: exchange.socialDistance,
       });
     });

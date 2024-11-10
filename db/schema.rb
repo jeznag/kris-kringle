@@ -34,6 +34,8 @@ ActiveRecord::Schema.define(version: 20171114083247) do
 
   create_table "gift_exchanges", force: :cascade do |t|
     t.string "giver_name"
+    t.string "giver_id"
+    t.string "receiver_id"
     t.string "receiver_name"
     t.string "social_distance"
     t.datetime "created_at", null: false
