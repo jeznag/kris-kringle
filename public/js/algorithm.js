@@ -297,7 +297,7 @@ const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot"
   "Emissary", "Greenhand", "Life Bringer", "Herald", "Custodian", "Gearsmith",
   "Vizier", "Knight", "Physician", "Charioteer", "Iron Warrior", "Field Defender",
   "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary",
-  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess"];
+  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate'];
 
 // Function to clean a name by removing honorifics
 function cleanName(name) {
@@ -598,6 +598,10 @@ function generateMatches(
         const recipientFromLastYear = possibleRecipients.find(recipient => {
           return areNamesSimilar(recipient, exchangeFromLastYear.receiver);
         });
+
+        if (!recipientFromLastYear) {
+          console.log('Uh oh 603', exchangeFromLastYear);
+        }
 
         const distanceFromLastRecipient = socialDistance(
           familyTree,
