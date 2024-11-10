@@ -593,12 +593,20 @@ function generateMatches(
           exchangeDataFromPreviousYear,
           currentGiver
         );
+
+        const distanceFromLastRecipient = socialDistance(
+          familyTree,
+          exchangeFromLastYear.receiver,
+          possibleRecipient
+        );
+
         const boughtForSamePersonLastYear =
           exchangeFromLastYear &&
           areNamesSimilar(exchangeFromLastYear.receiver, possibleRecipient);
 
         if (
           distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE &&
+          distanceFromLastRecipient > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE &&
           !recursiveGiving &&
           !boughtForSamePersonLastYear
         ) {
