@@ -159,9 +159,9 @@ function showResults() {
 
 function showResultsForThisYear() {
   const resultsContainer = document.querySelector('#results');
-  resultsContainer.innerHTML = generateResultsHTML(exchangeDataFromThisYearKids, 'Kids') +
-    generateResultsHTML(exchangeDataFromThisYearYoungAdults, 'Young Adults') +
-    generateResultsHTML(exchangeDataFromThisYearAdults, 'Old Guard');
+  resultsContainer.innerHTML = generateResultsHTML(exchangeDataFromThisYearKids, 'Kids', exchangeDataFromLastYearKids) +
+    generateResultsHTML(exchangeDataFromThisYearYoungAdults, 'Young Adults', exchangeDataFromLastYearYoungAdults) +
+    generateResultsHTML(exchangeDataFromThisYearAdults, 'Old Guard', exchangeDataFromLastYearAdults);
 }
 
 function displayNewSetOfResults() {
@@ -171,9 +171,9 @@ function displayNewSetOfResults() {
   const resultForAdults = algo.run(compiledTree, 'old guard', 'old guard', exchangeDataFromLastYearAdults);
 
   const resultsContainer = document.querySelector('#results');
-  resultsContainer.innerHTML = generateResultsHTML(resultForKids.result, 'Kids', resultForKids.iterations, resultForKids.executionTime) +
-    generateResultsHTML(resultForYoungAdults.result, 'Young Adults', resultForYoungAdults.iterations, resultForYoungAdults.executionTime) +
-    generateResultsHTML(resultForAdults.result, 'Adults', resultForAdults.iterations, resultForAdults.executionTime);
+  resultsContainer.innerHTML = generateResultsHTML(resultForKids.result, 'Kids', exchangeDataFromLastYearKids, resultForKids.iterations, resultForKids.executionTime) +
+    generateResultsHTML(resultForYoungAdults.result, 'Young Adults', exchangeDataFromLastYearYoungAdults, resultForYoungAdults.iterations, resultForYoungAdults.executionTime) +
+    generateResultsHTML(resultForAdults.result, 'Adults', resultForAdults.iterations, exchangeDataFromLastYearAdults, resultForAdults.executionTime);
 
   addButtonToSaveResults(resultForKids.result, resultForYoungAdults.result, resultForAdults.result);
 }
@@ -257,7 +257,8 @@ function levenshteinDistance(str1, str2) {
   return matrix[str1.length][str2.length];
 }
 
-function generateResultsHTML(results, resultType, iterations, executionTime) {
+function generateResultsHTML(results, resultType, exchangeDataFromLastYear, iterations, executionTime) {
+  debugger;
   const tableHTML = `<table>
       <thead>
         <tr>
@@ -271,13 +272,17 @@ function generateResultsHTML(results, resultType, iterations, executionTime) {
       <tbody>
         ${
           results.map((result) => {
+            let lastYearGaveTo = result.exchangeFromLastYear?.receiver;
+            if (!lastYearGaveTo) {
+              lastYearGaveTo = algo.getExchangeDataForGiver(result.giver, resultType, exchangeDataFromLastYear)?.receiver;
+            }
             return `
               <tr>
                 <td data-giver="${result.giver.toLowerCase()}">${result.giver}</td>
                 <td data-receiver="${result.receiver.toLowerCase()}">${result.receiver}</td>
                 <td>${levenshteinDistance(result.giver, result.receiver).toFixed(2)}</td>
                 <td>${result.socialDistance}</td>
-                <td>${result.exchangeFromLastYear?.receiver}</td>
+                <td>${lastYearGaveTo}</td>
               </tr>
             `;
           }).join('')

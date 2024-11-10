@@ -776,7 +776,8 @@ const facade = {
   addChildToNode,
   findNode,
   findNodeByID,
-  removeNode
+  removeNode,
+  getExchangeDataForGiver
 };
 
 if (typeof module !== "undefined") {
