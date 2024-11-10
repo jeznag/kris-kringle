@@ -167,6 +167,7 @@ function showResultsForThisYear() {
 function displayNewSetOfResults() {
   const resultForKids = algo.run(compiledTree, 'old guard', 'kid', exchangeDataFromLastYearKids);
   const resultForYoungAdults = algo.run(compiledTree, 'young adult', 'young adult', exchangeDataFromLastYearYoungAdults);
+  console.log('Running for adults');
   const resultForAdults = algo.run(compiledTree, 'old guard', 'old guard', exchangeDataFromLastYearAdults);
 
   const resultsContainer = document.querySelector('#results');

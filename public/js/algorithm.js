@@ -285,8 +285,6 @@ function getAllParticipatingPeopleInTree(tree, type) {
   return people;
 }
 
-let MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 10;
-
 function shuffleArray(arr) {
   const shuffledArray = arr.slice(0);
   return shuffledArray.sort((a, b) => (Math.random() > 0.5 ? -1 : 1));
@@ -296,7 +294,7 @@ function shuffleArray(arr) {
 const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot", "Long Bready Hair", 'Seneschal', 'Scholar', 'Merchant', "Bloodletter", "Healer", "Low Physician", "Sentinel", "Warden", "Castellan",
   "Emissary", "Greenhand", "Life Bringer", "Herald", "Custodian", "Gearsmith",
   "Vizier", "Knight", "Physician", "Charioteer", "Iron Warrior", "Field Defender",
-  "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary",
+  "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary", "Paladin",
   "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate'];
 
 // Function to clean a name by removing honorifics
@@ -333,10 +331,13 @@ function levenshteinDistance(str1, str2) {
 
 // Function to check if two names are similar based on a threshold
 function areNamesSimilar(name1, name2, threshold = 3) {
+  if (name1.includes('Patrick') && name2.includes('Patrick')) {
+    // debugger;
+  }
   const NAME_CHANGES_HARD_TO_FIND = [
     { oldName: 'Sist', newName: 'Tilly' },
     { oldName: 'Seneschal Krste Sekulovski', newName: 'Cartographer' },
-    { oldName: 'Seneschal Ash', newName: 'Swift healer' }
+    { oldName: ' Ash', newName: ' Ash' }
   ]
 
   const specialCaseResult = NAME_CHANGES_HARD_TO_FIND.find((nameData) => {
@@ -380,10 +381,21 @@ function checkNoRepeatGiving(thisYearExchanges, lastYearExchanges) {
       ).length > 1;
 
     const gaveToSamePersonLastYear = lastYearExchanges.find(
-      exchangeToCheck =>
-        areNamesSimilar(exchange.giver, exchangeToCheck.giver) &&
-        areNamesSimilar(exchange.receiver, exchangeToCheck.receiver)
+      exchangeToCheck => {
+        if (exchangeToCheck.receiver === NO_RECIPIENT && exchange.receiver === NO_RECIPIENT) {
+          return false;
+        }
+
+        return (
+          areNamesSimilar(exchange.giver, exchangeToCheck.giver) &&
+          areNamesSimilar(exchange.receiver, exchangeToCheck.receiver)
+        );
+      }
     );
+
+    if (hasRepeatGivingThisYear || gaveToSamePersonLastYear) {
+      console.log('Invalid: gavetolastpersn?', gaveToSamePersonLastYear, 'hasRepeatGivingThisYear', hasRepeatGivingThisYear)
+    }
 
     return !gaveToSamePersonLastYear && !hasRepeatGivingThisYear;
   });
@@ -411,7 +423,7 @@ function arrayDiff(array1, array2) {
   return missingItems;
 }
 
-const MAX_ITERATIONS = 50;
+const MAX_ITERATIONS = 100;
 /**
  * Generates matches. Performs a double check to make sure there is no repeat giving.
  */
@@ -440,15 +452,17 @@ function run(
     };
   }
 
-  const MAX_DURATION = 10000;
+  const MAX_DURATION = 90000;
 
   while (iterations < MAX_ITERATIONS && (new Date() - startTime) < MAX_DURATION) {
-    MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE = 10;
+    const MIN_DISTANCE = typeReceiver === 'old guard' ? 6 : 10;
     result = generateMatches(
       familyTree,
       typeGiver,
       typeReceiver,
-      exchangeDataFromPreviousYear
+      exchangeDataFromPreviousYear,
+      0,
+      MIN_DISTANCE
     );
 
     iterations++;
@@ -473,9 +487,10 @@ function run(
       continue;
     }
 
-    isValidResult =
-      checkNoRepeatGiving(result, exchangeDataFromPreviousYear) &&
-      checkNoRecursiveGiving(result);
+    const hasRepeatGiving = !checkNoRepeatGiving(result, exchangeDataFromPreviousYear);
+    const hasRecursiveGiving = !checkNoRecursiveGiving(result);
+
+    isValidResult = !hasRepeatGiving && !hasRecursiveGiving;
 
     if (isValidResult) {
       const processedResult = result.map(exchange => {
@@ -494,12 +509,15 @@ function run(
         0
       );
 
+      console.log('Distance this run: ', totalDistance, 'Best dinstance', bestResult.totalDistance);
       if (totalDistance > bestResult.totalDistance) {
         bestResult = {
           totalDistance,
           exchanges: result
         };
       }
+    } else {
+      console.log('invalid result :(', hasRecursiveGiving, hasRepeatGiving);
     }
   }
 
@@ -509,6 +527,7 @@ function run(
   console.log('executionTime', executionTime);
 
   if (!bestResult.totalDistance) {
+    console.log('No best result :(');
     return {
       result: [],
       iterations,
@@ -520,6 +539,31 @@ function run(
     iterations,
     executionTime
   };
+}
+
+const exchangeCache = {};
+
+function getExchangeDataForGiver(giverName, receiverType, exchangeDataFromPreviousYear) {
+  if (!exchangeCache[receiverType]) {
+    exchangeCache[receiverType] = {};
+  }
+
+  if (exchangeCache[receiverType][giverName]) {
+    return exchangeCache[receiverType][giverName];
+  }
+  const exchangeFromLastYear = getExchangeForGiver(
+    exchangeDataFromPreviousYear,
+    giverName
+  );
+
+  const lastYearExchangeCorrected = exchangeFromLastYear?.receiver?.includes('Sist') ? {
+    ...exchangeFromLastYear,
+    receiver: 'Princess Tilly'
+  } : exchangeFromLastYear;
+
+  exchangeCache[receiverType][giverName] = lastYearExchangeCorrected;
+
+  return lastYearExchangeCorrected;
 }
 
 /**
@@ -540,33 +584,45 @@ function generateMatches(
   typeGiver,
   typeReceiver,
   exchangeDataFromPreviousYear,
-  attempts = 0
+  attempts = 0,
+  minDistanceThreshold = null
 ) {
-  if (attempts > 50) {
-    MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE -= 1;
+  if (minDistanceThreshold === null) {
+    debugger;
+  }
+  if (attempts > 25) {
+    console.log('REDUCING MIN_DISTANCE', minDistanceThreshold);
 
-    if (MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE > 0) {
+    if (minDistanceThreshold > 0) {
       return generateMatches(
         familyTree,
         typeGiver,
         typeReceiver,
         exchangeDataFromPreviousYear,
-        0
+        0,
+        minDistanceThreshold - 1
       );
     }
 
+    console.log('Gave up - still no good results after 50', minDistanceThreshold);
     return [];
   }
   const exchanges = [];
 
+  const REMOVED_PARTICIPANTS = ['Seneschal Lea', 'Seneschal Liz']
+
   let possibleRecipients = shuffleArray(
     getAllParticipatingPeopleInTree(familyTree, typeReceiver)
   );
+  const allPossibleRecipients = possibleRecipients.slice(0);
+
   let possibleGivers = shuffleArray(
     getAllParticipatingPeopleInTree(familyTree, typeGiver)
   );
   let possibleRecipientsForThisGiver = possibleRecipients.slice(0);
   let currentGiver = possibleGivers[0];
+  let failureReasonsForThisGiver = [];
+  
   try {
     while (possibleGivers.length > 0 && possibleRecipientsForThisGiver.length > 0) {
       possibleRecipientsForThisGiver.forEach((possibleRecipient, index) => {
@@ -575,7 +631,7 @@ function generateMatches(
           if (possibleRecipientsForThisGiver.length > 1) {
             return;
           }
-          throw new Error("Invalid combination");
+          throw new Error("Can only give to self - bad combo - start again");
         }
         const distance = socialDistance(
           familyTree,
@@ -590,34 +646,36 @@ function generateMatches(
           personWhoIsBuyingForGiver &&
           personWhoIsBuyingForGiver.giver === possibleRecipient;
 
-        const exchangeFromLastYear = getExchangeForGiver(
-          exchangeDataFromPreviousYear,
-          currentGiver
-        );
+        const exchangeFromLastYear = getExchangeDataForGiver(currentGiver, typeReceiver, exchangeDataFromPreviousYear);
 
-        const recipientFromLastYear = possibleRecipients.find(recipient => {
+        const recipientFromLastYear = exchangeFromLastYear && allPossibleRecipients.find(recipient => {
           return areNamesSimilar(recipient, exchangeFromLastYear.receiver);
         });
 
-        if (!recipientFromLastYear) {
+        const isKnownMissingRecipient = exchangeFromLastYear && (exchangeFromLastYear.receiver === NO_RECIPIENT || REMOVED_PARTICIPANTS.find((removedParticipant) => {
+          return exchangeFromLastYear.receiver.includes(removedParticipant)
+        }));
+
+        if (!recipientFromLastYear && !isKnownMissingRecipient && exchangeFromLastYear?.receiver !== NO_RECIPIENT) {
           console.log('Uh oh 603', exchangeFromLastYear);
+          debugger;
         }
 
-        const distanceFromLastRecipient = socialDistance(
+        const distanceFromLastRecipient = typeReceiver === 'kid' || isKnownMissingRecipient ? 99999 : socialDistance(
           familyTree,
           recipientFromLastYear,
           possibleRecipient
         );
-
-        console.log(distanceFromLastRecipient)
 
         const boughtForSamePersonLastYear =
           exchangeFromLastYear &&
           areNamesSimilar(exchangeFromLastYear.receiver, possibleRecipient);
 
         if (
-          distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE &&
-          distanceFromLastRecipient > (MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE - 5) &&
+          distance > minDistanceThreshold &&
+          // try to choose someone way different compared to last year
+          // this doesn't work for old guard because they're too closely related
+          (typeReceiver === 'old guard' || distanceFromLastRecipient > (minDistanceThreshold - 5)) &&
           !recursiveGiving &&
           !boughtForSamePersonLastYear
         ) {
@@ -625,7 +683,7 @@ function generateMatches(
             giver: currentGiver,
             receiver: possibleRecipient,
             socialDistance: distance,
-            exchangeFromLastYear,
+            exchangeFromLastYear: exchangeFromLastYear,
             giver_id: findNode(familyTree, currentGiver).ID,
             receiver_id: findNode(familyTree, possibleRecipient).ID
           });
@@ -639,6 +697,25 @@ function generateMatches(
             possibleRecipientsForThisGiver = possibleRecipients.slice(0);
           }
         } else {
+          if (distance < minDistanceThreshold) {
+            failureReasonsForThisGiver.push({
+              possibleRecipient,
+              reason: 'distance too close',
+              distance,
+              minDistanceThreshold
+            });
+          } else if (boughtForSamePersonLastYear) {
+            failureReasonsForThisGiver.push({
+              possibleRecipient,
+              reason: 'bought for same person',
+              exchangeFromLastYear
+            })
+          } else if (recursiveGiving) {
+            failureReasonsForThisGiver.push({
+              possibleRecipient,
+              reason: 'recursive giving'
+            })
+          }
           // recipient is too close to giver. Take them off the list of possibilities.
           const indexOfReceiver = possibleRecipientsForThisGiver.indexOf(
             possibleRecipient
@@ -648,31 +725,42 @@ function generateMatches(
       });
 
       if (!possibleRecipientsForThisGiver.length && possibleRecipients.length) {
+        // console.log('no possible recipients for', currentGiver, JSON.stringify(failureReasonsForThisGiver));
         throw new Error("Bad result. Try again");
       }
     }
 
     if (possibleGivers.length > 0 && possibleRecipients.length === 0) {
       possibleGivers.forEach((giver) => {
+        const exchangeFromLastYear = getExchangeDataForGiver(giver, typeReceiver, exchangeDataFromPreviousYear);
+
         exchanges.push({
           giver,
           receiver: NO_RECIPIENT,
-          socialDistance: -1
+          socialDistance: -1,
+          exchangeFromLastYear: exchangeFromLastYear
         });
       });
     }
   } catch (e) {
+    if (typeReceiver === 'old guard') {
+      // debugger
+    }
+    if (!(e.message.includes('Invalid') || e.message.includes('Bad result') || e.message.includes('bad combo'))) {
+      console.error(e);
+      debugger
+    }
     // invalid combination - start again
     return generateMatches(
       familyTree,
       typeGiver,
       typeReceiver,
       exchangeDataFromPreviousYear,
-      attempts + 1
+      attempts + 1,
+      minDistanceThreshold
     );
   }
 
-  debugger
   return exchanges;
 }
 
