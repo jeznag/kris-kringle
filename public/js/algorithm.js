@@ -589,16 +589,23 @@ function generateMatches(
         const recursiveGiving =
           personWhoIsBuyingForGiver &&
           personWhoIsBuyingForGiver.giver === possibleRecipient;
+
         const exchangeFromLastYear = getExchangeForGiver(
           exchangeDataFromPreviousYear,
           currentGiver
         );
 
+        const recipientFromLastYear = possibleRecipients.find(recipient => {
+          return areNamesSimilar(recipient, exchangeFromLastYear.recipient);
+        });
+
         const distanceFromLastRecipient = socialDistance(
           familyTree,
-          exchangeFromLastYear.receiver,
+          recipientFromLastYear,
           possibleRecipient
         );
+
+        console.log(distanceFromLastRecipient)
 
         const boughtForSamePersonLastYear =
           exchangeFromLastYear &&

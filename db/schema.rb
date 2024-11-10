@@ -2,17 +2,21 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your
-# database schema. If you need to create the application database on another
-# system, you should be using db:schema:load, not running all the migrations
-# from scratch. The latter is a flawed and unsustainable approach (the more migrations
-# you'll amass, the slower it'll run and the greater likelihood for issues).
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171114083247) do
+ActiveRecord::Schema.define(version: 2024_11_10_000336) do
 
-  create_table "accounts", force: :cascade do |t|
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_stat_statements"
+  enable_extension "plpgsql"
+
+  create_table "accounts", id: :serial, force: :cascade do |t|
     t.string "account_name"
     t.string "account_id"
     t.datetime "created_at", null: false
@@ -20,7 +24,7 @@ ActiveRecord::Schema.define(version: 20171114083247) do
     t.string "email"
   end
 
-  create_table "family_members", force: :cascade do |t|
+  create_table "family_members", id: :serial, force: :cascade do |t|
     t.string "name"
     t.string "partner"
     t.string "type"
@@ -32,10 +36,8 @@ ActiveRecord::Schema.define(version: 20171114083247) do
     t.string "participating_this_year"
   end
 
-  create_table "gift_exchanges", force: :cascade do |t|
+  create_table "gift_exchanges", id: :serial, force: :cascade do |t|
     t.string "giver_name"
-    t.string "giver_id"
-    t.string "receiver_id"
     t.string "receiver_name"
     t.string "social_distance"
     t.datetime "created_at", null: false
@@ -44,6 +46,8 @@ ActiveRecord::Schema.define(version: 20171114083247) do
     t.string "giver_type"
     t.string "xmas_year"
     t.string "account_id"
+    t.integer "giver_id"
+    t.integer "receiver_id"
   end
 
 end
