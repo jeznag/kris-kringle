@@ -606,7 +606,7 @@ function generateMatches(
 
         if (
           distance > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE &&
-          distanceFromLastRecipient > MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE &&
+          distanceFromLastRecipient > (MIN_DISTANCE_THRESHOLD_FOR_EXCHANGE - 5) &&
           !recursiveGiving &&
           !boughtForSamePersonLastYear
         ) {
