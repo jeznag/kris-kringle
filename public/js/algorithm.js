@@ -593,8 +593,8 @@ function generateMatches(
             receiver: possibleRecipient,
             socialDistance: distance,
             exchangeFromLastYear,
-            giver_id: findNode(currentGiver).id,
-            receiver_id: findNode(possibleRecipient).id
+            giver_id: findNode(familyTree, currentGiver).ID,
+            receiver_id: findNode(familyTree, possibleRecipient).ID
           });
           const indexOfReceiver = possibleRecipients.indexOf(possibleRecipient);
           possibleRecipients.splice(indexOfReceiver, 1);
