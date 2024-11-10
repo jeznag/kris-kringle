@@ -596,7 +596,7 @@ function generateMatches(
         );
 
         const recipientFromLastYear = possibleRecipients.find(recipient => {
-          return areNamesSimilar(recipient, exchangeFromLastYear.recipient);
+          return areNamesSimilar(recipient, exchangeFromLastYear.receiver);
         });
 
         const distanceFromLastRecipient = socialDistance(
