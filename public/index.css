@@ -381,3 +381,42 @@ tbody tr:nth-child(odd){ background:#fafdfc; }
 @media (max-width: 640px){
   #tree{ grid-template-columns: 1fr; }
 }
+
+/* --- Tables: readable on mobile --- */
+
+/* Fluid table font with sensible floor/ceiling */
+:root {
+  --table-font: clamp(14px, 3.8vw, 16px);
+}
+
+/* Make tables scroll instead of shrinking text */
+.margin-top-md { overflow-x: auto; }
+
+/* Base improvements */
+.margin-top-md table {
+  width: 100%;
+  border-spacing: 0;
+}
+
+/* Mobile: bigger text, comfy padding, sticky header, min width for scroll */
+@media (max-width: 640px) {
+  .margin-top-md table { font-size: var(--table-font); min-width: 560px; }
+  .margin-top-md th,
+  .margin-top-md td { padding: 10px 8px; line-height: 1.35; }
+  .margin-top-md thead th {
+    position: sticky; top: 0; background: #1f2a24; /* match your theme */
+    z-index: 1;
+  }
+  /* Keep long names usable */
+  .margin-top-md td { word-break: break-word; }
+  .margin-top-md th:nth-child(3),
+  .margin-top-md th:nth-child(4),
+  .margin-top-md td:nth-child(3),
+  .margin-top-md td:nth-child(4) { text-align: center; white-space: nowrap; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .margin-top-md table { min-width: 520px; }
+  .margin-top-md th, .margin-top-md td { padding: 10px 6px; }
+}
