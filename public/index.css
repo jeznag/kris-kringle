@@ -132,9 +132,8 @@ thead th{
   border-bottom:1px solid #dde7e2;
 }
 thead th:first-child{ border-left:4px solid var(--green); }
-thead th:nth-child(3)::after{ content:" ✨"; }
-thead th:nth-child(4)::after{ content:" 🧬"; }
-thead th:nth-child(5)::after{ content:" 🎁"; }
+thead th:nth-child(3)::after{ content:" 🧬"; }
+thead th:nth-child(4)::after{ content:" 🎁"; }
 tbody td{
   padding:.7rem .8rem;
   border-top:1px solid #eef3f1;

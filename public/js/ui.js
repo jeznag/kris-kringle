@@ -264,7 +264,6 @@ function generateResultsHTML(results, resultType, exchangeDataFromLastYear, iter
         <tr>
           <th>Giver</th>
           <th>Receiver</th>
-          <th>Levenshtein distance</th>
           <th>Genetic Distance</th>
           <th>Gave to last year</th>
         </tr>
@@ -280,7 +279,6 @@ function generateResultsHTML(results, resultType, exchangeDataFromLastYear, iter
               <tr>
                 <td data-giver="${result.giver.toLowerCase()}">${result.giver}</td>
                 <td data-receiver="${result.receiver.toLowerCase()}">${result.receiver}</td>
-                <td>${levenshteinDistance(result.giver, result.receiver).toFixed(2)}</td>
                 <td>${result.socialDistance}</td>
                 <td>${lastYearGaveTo}</td>
               </tr>
