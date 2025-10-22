@@ -1,84 +1,321 @@
-body, input, button {
-  font-family: monospace;
+/* ====== Kris Kringle – Clean Xmas Theme (Consolidated) ====== */
+
+/* System sizing */
+html { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+
+/* Palette */
+:root{
+  --green:#0f5132;
+  --red:#c62828;
+  --gold:#d4a017;
+  --ink:#10221b;
+  --card:#ffffff;
+  --cardLine:#dfe9e5;
+  --mutedLine:#e9f2ee;
+  --page:#162c26; /* flat, no texture */
 }
 
-.node {
-  display: flex;
-  padding-left: 0;
-  padding-top: 3rem;
+/* Base typography (ditch monospace everywhere) */
+body, input, button, select, textarea, table, th, td, label {
+  font: 16px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
+  color: var(--ink);
 }
 
-.node[data-child-num="0"]:not([data-depth="1"]) {
-  padding-left: 0;
+/* Page */
+html, body { height: 100%; }
+body{
+  margin:0;
+  background: var(--page);
+  text-shadow: none;
 }
 
-.node[data-child-num="0"][data-depth="1"] {
-  padding-top: 0;
+/* Container card */
+.container{
+  max-width: min(1200px, 95vw);
+  margin: clamp(16px, 4vw, 48px) auto;
+  padding: clamp(16px, 3vw, 36px);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  position: relative;
+  overflow: visible; /* avoid clipping children */
 }
 
-.input-wrapper {
-  border: 1px solid black;
-  height: 13rem;
-  padding: 1rem;
-  min-width: 9rem;
-  max-width: 17rem;
+/* Garland (static, subtle) */
+.container::before,
+.container::after{
+  content:"";
+  position:absolute; left:0; right:0; height:10px;
+  background:
+    radial-gradient(circle at 10% 50%, var(--red) 0 3px, transparent 4px),
+    radial-gradient(circle at 30% 50%, var(--gold) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 50%, #5ad0ff 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 50%, #ff7aa0 0 3px, transparent 4px),
+    radial-gradient(circle at 90% 50%, #b5ff7a 0 3px, transparent 4px),
+    linear-gradient(#0b3d2e,#0b3d2e);
+  background-size: 70px 10px, 70px 10px, 70px 10px, 70px 10px, 70px 10px, 100% 10px;
+  background-position: 0 0, 14px 0, 28px 0, 42px 0, 56px 0, 0 0;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,.25));
+}
+.container::before{ top:0; border-top-left-radius:24px; border-top-right-radius:24px; }
+.container::after{ bottom:0; border-bottom-left-radius:24px; border-bottom-right-radius:24px; }
+
+/* Headings */
+h1,h2,h3{ margin:0 0 .6rem; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.35); }
+h1{
+  font-size: clamp(28px,4.2vw,48px);
+  font-weight: 800;
+}
+h1::before{ content:"🎄"; margin-right:.4ch; }
+h2{
+  font-size: clamp(20px,2.4vw,28px);
+  border-left:6px solid var(--red);
+  padding-left:.6rem;
+}
+h3{ font-weight:600; color:#e7f0ec; overflow-wrap:anywhere; }
+
+/* Controls above results */
+label{
+  display:block;
+  margin: .5rem 0 .25rem;
+  color:#e7f0ec;
+  font-weight:700;
+}
+#filter-results{
+  width:min(480px, 100%);
+  padding:.65rem .8rem;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.18);
+  color:#fff;
+  outline:none;
+}
+#filter-results::placeholder{ color: rgba(255,255,255,.7); }
+
+/* Primary button */
+#generate-results{
+  appearance:none; cursor:pointer; border:0;
+  padding:.75rem 1.1rem; margin:.5rem 0 1rem;
+  border-radius:999px; font-weight:800; letter-spacing:.3px;
+  color:#fff; background: linear-gradient(180deg, var(--red), #9e1f1f);
+  box-shadow: 0 4px 0 #6d1414, 0 8px 18px rgba(0,0,0,.25);
 }
 
-label {
-  font-weight: bold;
-}
-
-.input-wrapper[data-disabled="disabled"] {
-  height: 10rem;
-}
-
-.container {
-  margin-left: 2rem;
-  margin-top: 1rem;
-  padding-bottom: 3rem;
-}
-
-.input-group {
-  padding: .25rem 0;
-}
-
-.margin-top-md {
+/* ===== Results tables (legible) ===== */
+#results .margin-top-md{
   margin-top: 2rem;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:16px;
+  padding:1rem;
 }
 
-.margin-top-xs {
-  margin-top: .5rem;
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border:1px solid #e3ece7;
+  border-radius:12px;
+  overflow:hidden;
+}
+thead th{
+  text-align:left;
+  padding:.75rem .8rem;
+  background:#f3f7f5;
+  color:#0d1b16;
+  font-weight:700;
+  border-bottom:1px solid #dde7e2;
+}
+thead th:first-child{ border-left:4px solid var(--green); }
+thead th:nth-child(3)::after{ content:" ✨"; }
+thead th:nth-child(4)::after{ content:" 🧬"; }
+thead th:nth-child(5)::after{ content:" 🎁"; }
+tbody td{
+  padding:.7rem .8rem;
+  border-top:1px solid #eef3f1;
+  color:#152821;
+}
+tbody tr:nth-child(odd){ background:#fafdfc; }
+
+/* ===== Family Tree (responsive, no clipping) ===== */
+
+/* Grid the top-level nodes; stack children inside parents */
+#tree{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap:16px;
+  align-items:start;
 }
 
-.margin-botton-sm {
-  margin-bottom: 1rem;
+/* Card for each node */
+#tree .node{
+  display:block;
+  background: var(--card);
+  border:1px solid var(--cardLine);
+  border-radius:14px;
+  padding:0;           /* handled by .input-wrapper */
+  max-width:100%;
 }
 
-.inline-block {
-  display: inline-block;
+/* Remove old fixed sizes that clipped content */
+#tree .input-wrapper{
+  border:0;
+  height:auto;         /* critical fix */
+  min-width:auto;
+  max-width:none;
+  padding:14px;
 }
 
-th {
-  text-align: left;
+/* Inputs inside a node */
+#tree .input-group{ margin:.5rem 0; }
+#tree label{ color:var(--ink); margin:0 0 .25rem; font-weight:700; }
+#tree input[type="text"], 
+#tree select{
+  width:100%;
+  background:#fff;
+  color:var(--ink);
+  border:1px solid #cfe0d8;
+  border-radius:12px;
+  padding:.6rem .75rem;
+  min-height:40px;
 }
 
-td, th {
-  border: 1px solid black;
-  padding: 1rem;
+/* Row for the Add/Remove buttons */
+#tree .margin-top-xs{ margin-top:.75rem; }
+#tree button{
+  font:inherit;
+  background: var(--red);
+  color:#fff;
+  border:0;
+  border-radius:999px;
+  padding:.5rem .9rem;
+  box-shadow:0 3px 0 #6d1414, 0 6px 14px rgba(0,0,0,.18);
+  margin-right:.5rem;
 }
 
-.loading {
-  animation: 3s infinite alternate slidein;
+/* Nested children: stack vertically with a light guide line */
+#tree .node .node{
+  margin:12px 0 0 16px;
+  border-left:2px dashed var(--mutedLine);
+  padding-left:12px;
+  background: transparent;
+  border-radius:0;
 }
 
-@keyframes slidein {
-  from {
-    margin-left: 25%;
-    width: 300%;
+/* Accessibility */
+:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+
+/* No animations anywhere */
+*, *::before, *::after { transition:none !important; animation:none !important; }
+
+/* Small screens */
+@media (max-width:640px){
+  .container{ padding:16px; }
+  h1{ font-size: clamp(24px, 8vw, 36px); }
+}
+
+/* ===== Parent → Child hierarchy visuals ===== */
+
+/* Make every node a positioning context */
+#tree .node{ position: relative; }
+
+/* 1) Parents (depth=1): keep card, add a "Children" divider when there are children */
+#tree .node[data-depth="1"]:has(> .node) .input-wrapper{
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed #e6efeb;
+}
+#tree .node[data-depth="1"]:has(> .node) .input-wrapper::after{
+  content: "Children";
+  display: block;
+  font-size: .82rem;
+  letter-spacing: .2px;
+  color: #5e716b;
+  margin-top: 6px;
+}
+
+/* 2) First-level children (depth=2): inset cards with a connector elbow */
+#tree .node[data-depth="1"] > .node[data-depth="2"]{
+  background: #fafdfc;
+  border: 1px solid #e7efeb;
+  border-left: 4px solid var(--green);
+  border-radius: 12px;
+  margin: 12px 12px 0 18px;
+  padding: 0; /* handled by .input-wrapper */
+}
+#tree .node[data-depth="1"] > .node[data-depth="2"] .input-wrapper{
+  padding: 12px;
+  border: 0;
+  background: transparent;
+}
+#tree .node[data-depth="1"] > .node[data-depth="2"]::before{
+  /* elbow connector to the parent */
+  content:"";
+  position:absolute;
+  left:-18px;             /* starts in parent gutter */
+  top:26px;               /* aligns roughly with first label */
+  width:14px; height:2px;
+  background:#cbdad4;
+}
+#tree .node[data-depth="1"] > .node[data-depth="2"]::after{
+  /* short vertical upstroke (looks like an elbow) */
+  content:"";
+  position:absolute;
+  left:-18px; top:12px; width:2px; height:16px;
+  background:#cbdad4;
+}
+
+/* 3) Deeper descendants (depth>=3): lighter inset + gold accent so nesting reads clearly */
+#tree .node .node[data-depth="3"],
+#tree .node .node .node[data-depth="4"]{
+  background:#ffffff;
+  border:1px solid #eef3f1;
+  border-left:4px solid var(--gold);
+  border-radius:10px;
+  margin:10px 10px 0 16px;
+}
+#tree .node .node[data-depth="3"] .input-wrapper,
+#tree .node .node .node[data-depth="4"] .input-wrapper{
+  padding:10px;
+}
+
+/* 4) Vertical guide for stacked descendants inside a child block */
+#tree .node .node > .node{
+  position: relative;
+}
+#tree .node .node > .node::before{
+  content:"";
+  position:absolute;
+  left:-16px;
+  top:0; bottom:auto;
+  width:12px; height:2px;
+  background:#d5e3de;      /* elbow to its immediate parent */
+}
+#tree .node .node > .node::after{
+  content:"";
+  position:absolute;
+  left:-16px; top:-12px; bottom:-6px; /* soft vertical guide */
+  width:2px;
+  background:linear-gradient(#d5e3de,#d5e3de) no-repeat left top/2px calc(100% + 18px);
+  opacity:.75;
+}
+
+/* 5) Tweak headings inside children so labels stand out but don't overpower */
+#tree .node .input-group label{
+  color:#1b2b25;
+  font-weight:700;
+}
+
+/* 6) Slightly tighter spacing for child buttons */
+#tree .node .margin-top-xs{ margin-top:.6rem; }
+#tree .node button{ margin-right:.5rem; }
+
+/* 7) Compact on small screens so hierarchy still reads */
+@media (max-width: 640px){
+  #tree{
+    grid-template-columns: 1fr;
   }
-
-  to {
-    margin-left: 0%;
-    width: 100%;
-  }
+  #tree .node[data-depth="1"] > .node[data-depth="2"]{ margin-left:14px; }
 }

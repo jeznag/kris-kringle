@@ -228,7 +228,7 @@ function areParentChild(tree, person1, person2) {
   return isParentOf(tree, person1, person2) || isParentOf(tree, person2, person1);
 }
 
-function socialDistance(tree, person1, person2) {
+function _calculateSocialDistance(tree, person1, person2) {
   if (!person1 || !person2) {
     return 0;
   }
@@ -297,14 +297,21 @@ const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot"
   "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary", "Paladin",
   "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate'];
 
-// Function to clean a name by removing honorifics
+const cleanedNameCache = {};
+
 function cleanName(name) {
+  if (cleanedNameCache[name]) {
+    return cleanedNameCache[name];
+  }
+  
   let cleanedName = name;
   honorifics.forEach(honorific => {
     const regex = new RegExp(`\\b${honorific}\\b`, 'gi');
     cleanedName = cleanedName.replace(regex, '').trim();
   });
-  return cleanedName.replace(/\s+/g, ' '); // remove extra spaces
+  cleanedName = cleanedName.replace(/\s+/g, ' ');
+  cleanedNameCache[name] = cleanedName;
+  return cleanedName;
 }
 
 // Existing Levenshtein distance function
@@ -329,8 +336,29 @@ function levenshteinDistance(str1, str2) {
   return dp[str1.length][str2.length];
 }
 
+const SIMILARITY_THRESHOLD = 0.25;
+
+function relativeDistance(a, b) {
+  const d = levenshteinDistance(a, b);
+  const maxLen = Math.max(a.length, b.length) || 1;
+  return d / maxLen; // 0..1 (lower = closer)
+}
+
+const nameSimilarityCache = {};
+
 // Function to check if two names are similar based on a threshold
-function areNamesSimilar(name1, name2, threshold = 3) {
+function areNamesSimilar(name1, name2) {
+  const cacheKey = [name1, name2].sort().join('|');
+  if (nameSimilarityCache[cacheKey] !== undefined) {
+    return nameSimilarityCache[cacheKey];
+  }
+
+  const result = _areNamesSimilar(name1, name2);
+  nameSimilarityCache[cacheKey] = result;
+  return result;
+}
+
+function _areNamesSimilar(name1, name2) {
   if (name1.includes('Patrick') && name2.includes('Patrick')) {
     // debugger;
   }
@@ -345,13 +373,18 @@ function areNamesSimilar(name1, name2, threshold = 3) {
       (name2.includes(nameData.oldName) && name1.includes(nameData.newName));
   })
   if (specialCaseResult) {
+    console.log('Special case match for', name1, name2);
     return true;
   }
 
   const cleanedName1 = cleanName(name1);
   const cleanedName2 = cleanName(name2);
-  const distance = levenshteinDistance(cleanedName1, cleanedName2);
-  return distance <= threshold; // Adjust threshold as needed
+  const distance = relativeDistance(cleanedName1, cleanedName2);
+
+  if (distance <= SIMILARITY_THRESHOLD && name1 !== name2) {
+    console.log(`Names "${name1}" and "${name2}", (${cleanedName1}, ${cleanedName2}) are similar (distance: ${distance})`);
+  }
+  return distance <= SIMILARITY_THRESHOLD; // Adjust threshold as needed
 }
 
 // Main function to check for repeat giving
@@ -372,13 +405,20 @@ function checkNoRepeatGiving(thisYearExchanges, lastYearExchanges) {
     });
 
     if (!foundLastYearMatch) {
-      console.log('No match found for', exchange.giver);
+      // console.debug('No last year match found for', exchange.giver);
     }
 
-    const hasRepeatGivingThisYear =
-      thisYearExchanges.filter(
-        exchangeToCheck => areNamesSimilar(exchangeToCheck.giver, exchange.giver)
-      ).length > 1;
+    const duplicateExchangesThisYear = thisYearExchanges.filter(
+        exchangeToCheck => {
+          if (areNamesSimilar(exchangeToCheck.giver, exchange.giver) && JSON.stringify(exchangeToCheck) !== JSON.stringify(exchange)) {
+            console.log('Found duplicate this year for', exchange.giver, exchangeToCheck, exchange);
+            return true;
+          }
+        }
+    );
+
+    const hasRepeatGivingThisYear = duplicateExchangesThisYear
+      .length > 1;
 
     const gaveToSamePersonLastYear = lastYearExchanges.find(
       exchangeToCheck => {
@@ -394,7 +434,7 @@ function checkNoRepeatGiving(thisYearExchanges, lastYearExchanges) {
     );
 
     if (hasRepeatGivingThisYear || gaveToSamePersonLastYear) {
-      console.log('Invalid: gavetolastpersn?', gaveToSamePersonLastYear, 'hasRepeatGivingThisYear', hasRepeatGivingThisYear)
+      console.log('Invalid: gavetolastpersn?', gaveToSamePersonLastYear, 'hasRepeatGivingThisYear', hasRepeatGivingThisYear, JSON.stringify(duplicateExchangesThisYear))
     }
 
     return !gaveToSamePersonLastYear && !hasRepeatGivingThisYear;
@@ -496,7 +536,7 @@ function run(
       const processedResult = result.map(exchange => {
         return {
           ...exchange,
-          socialDistance: socialDistance(
+          socialDistance: getSocialDistance(
             familyTree,
             exchange.giver,
             exchange.receiver
@@ -541,6 +581,16 @@ function run(
   };
 }
 
+const distanceCache = {};
+
+function getSocialDistance(tree, person1, person2) {
+  const key = [person1, person2].sort().join('|');
+  if (distanceCache[key] === undefined) {
+    distanceCache[key] = _calculateSocialDistance(tree, person1, person2);
+  }
+  return distanceCache[key];
+}
+
 const exchangeCache = {};
 
 function getExchangeDataForGiver(giverName, receiverType, exchangeDataFromPreviousYear) {
@@ -565,6 +615,8 @@ function getExchangeDataForGiver(giverName, receiverType, exchangeDataFromPrevio
 
   return lastYearExchangeCorrected;
 }
+
+const missingRecipientsThatWeFound = [];
 
 /**
  * Generates possible kris kringle matches adhering to the following business rules:
@@ -633,7 +685,7 @@ function generateMatches(
           }
           throw new Error("Can only give to self - bad combo - start again");
         }
-        const distance = socialDistance(
+        const distance = getSocialDistance(
           familyTree,
           currentGiver,
           possibleRecipient
@@ -656,12 +708,13 @@ function generateMatches(
           return exchangeFromLastYear.receiver.includes(removedParticipant)
         }));
 
-        if (!recipientFromLastYear && !isKnownMissingRecipient && exchangeFromLastYear?.receiver !== NO_RECIPIENT) {
-          console.log('Uh oh 603', exchangeFromLastYear);
+        if (exchangeFromLastYear && !recipientFromLastYear && !isKnownMissingRecipient && exchangeFromLastYear?.receiver !== NO_RECIPIENT && missingRecipientsThatWeFound.includes(exchangeFromLastYear.receiver) === false) {
+          console.log('Uh oh 603 - gave to someone last year', exchangeFromLastYear.receiver, allPossibleRecipients);
+          missingRecipientsThatWeFound.push(exchangeFromLastYear.receiver);
           debugger;
         }
 
-        const distanceFromLastRecipient = typeReceiver === 'kid' || isKnownMissingRecipient ? 99999 : socialDistance(
+        const distanceFromLastRecipient = typeReceiver === 'kid' || isKnownMissingRecipient ? 99999 : getSocialDistance(
           familyTree,
           recipientFromLastYear,
           possibleRecipient
@@ -769,7 +822,7 @@ const facade = {
   dfs,
   bfs,
   treeDepth,
-  socialDistance,
+  getSocialDistance,
   getDepthOfPerson,
   isParentOf,
   compileTree,
