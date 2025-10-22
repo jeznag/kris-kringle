@@ -91,7 +91,7 @@ const testData = [
   },
   {
     id: 12,
-    name: "Maryanne",
+    name: "Maryanne McGannon",
     partner: "Dan",
     family_member_type: "old guard",
     parent_id: null,
@@ -340,7 +340,7 @@ function checkDistanceCalculation() {
   ];
 
   distanceTestCases.forEach(testCase => {
-    const socialDistance = algo.socialDistance(
+    const socialDistance = algo.getSocialDistance(
       testTree,
       testCase.person1,
       testCase.person2
@@ -547,7 +547,7 @@ function checkSocialDistance2() {
   ];
 
   distanceTestCases.forEach(testCase => {
-    const socialDistance = algo.socialDistance(
+    const socialDistance = algo.getSocialDistance(
       testTree2,
       testCase.giver,
       testCase.receiver
