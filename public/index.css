@@ -386,7 +386,7 @@ tbody tr:nth-child(odd){ background:#fafdfc; }
 
 /* Fluid table font with sensible floor/ceiling */
 :root {
-  --table-font: clamp(14px, 3.8vw, 16px);
+  --table-font: clamp(18px, 4.5vw, 22px);
 }
 
 /* Make tables scroll instead of shrinking text */
