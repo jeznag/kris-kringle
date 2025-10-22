@@ -274,7 +274,7 @@ function generateResultsHTML(results, resultType, exchangeDataFromLastYear, iter
           results.map((result) => {
             let lastYearGaveTo = result.exchangeFromLastYear?.receiver;
             if (!lastYearGaveTo) {
-              lastYearGaveTo = algo.getExchangeDataForGiver(result.giver, resultType, exchangeDataFromLastYear)?.receiver;
+              lastYearGaveTo = algo.getExchangeDataForGiver(result.giver, resultType, exchangeDataFromLastYear)?.receiver || 'Newcomer!';
             }
             return `
               <tr>
