@@ -5,12 +5,11 @@ Generates kris kringle matches based on the following business rules.
 * 4. Financial situation should be respected so that young adults don't have to buy too many gifts
 * 5. Any left over people should be assigned to a leftover pool
 
-Uses a very inefficient graph searching approach to find matches based on social distance.
+Uses a very inefficient (though slightly better now there's caching) graph searching approach to find matches based on social distance.
 
 # TODO
 - Fix select type issue
 - Add field to signal not involved this year
-- Put admin key in env variable
 - Block brute forcing account ID
 - Test mailers (email account URL)
 - graph of gift giving
