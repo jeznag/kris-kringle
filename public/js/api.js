@@ -1,5 +1,19 @@
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
-const HTTP_NO_CONTENT = 204;
+const HTTP_UNAUTHORIZED = 401;
+const API_ERROR_EVENT = 'kris-kringle:api-error';
+const SESSION_EXPIRED_MESSAGE = 'Your head elf login has expired, so that change wasn\'t saved. Reload the page to log in again.';
+
+/** Reports failed writes to the page (via API_ERROR_EVENT) and rejects so callers can react. */
+function ensureOk(response) {
+  if (response.ok) {
+    return response;
+  }
+  const message = response.status === HTTP_UNAUTHORIZED
+    ? SESSION_EXPIRED_MESSAGE
+    : `Something went wrong saving that (error ${response.status}). Please try again.`;
+  window.dispatchEvent(new CustomEvent(API_ERROR_EVENT, { detail: message }));
+  throw new Error(message);
+}
 
 function accountQuery() {
   return `account_id=${encodeURIComponent(window.accountID)}`;
@@ -17,13 +31,13 @@ async function updatePersonOnServer(nodeData) {
   delete updatedDataForServer.children;
   delete updatedDataForServer.participating;
 
-  await fetch(`/family_members/${nodeData.ID}.json?${accountQuery()}`, {
+  ensureOk(await fetch(`/family_members/${nodeData.ID}.json?${accountQuery()}`, {
     method: 'PATCH',
     body: JSON.stringify({
       family_member: updatedDataForServer,
     }),
     headers: JSON_HEADERS,
-  });
+  }));
 }
 
 async function fetchFamilyMemberData() {
@@ -45,37 +59,35 @@ async function addPerson(personData) {
   }, personData);
   delete personDataForServer.parent;
   delete personDataForServer.type;
-  const response = await fetch(`/family_members.json?${accountQuery()}`, {
+  const response = ensureOk(await fetch(`/family_members.json?${accountQuery()}`, {
     method: 'POST',
     body: JSON.stringify({
       family_member: personDataForServer,
     }),
     headers: JSON_HEADERS,
-  });
+  }));
   return response.json();
 }
 
 async function removePerson(personID) {
-  await fetch(`/family_members/${personID}.json?${accountQuery()}`, {
+  ensureOk(await fetch(`/family_members/${personID}.json?${accountQuery()}`, {
     method: 'DELETE',
-  });
+  }));
 }
 
 async function saveGiftExchanges(exchanges, xmasYear) {
-  const response = await fetch(`/gift_exchanges.json?${accountQuery()}`, {
+  ensureOk(await fetch(`/gift_exchanges.json?${accountQuery()}`, {
     method: 'POST',
     body: JSON.stringify({
       xmas_year: xmasYear,
       gift_exchanges: exchanges.map((exchangeData) => ({ gift_exchange: exchangeData })),
     }),
     headers: JSON_HEADERS,
-  });
-  if (response.status !== HTTP_NO_CONTENT) {
-    throw new Error('Could not save gift exchanges');
-  }
+  }));
 }
 
 window.api = {
+  API_ERROR_EVENT,
   updatePersonOnServer,
   fetchFamilyMemberData,
   fetchGiftExchangeData,

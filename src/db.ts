@@ -2,6 +2,7 @@ export interface Account {
   id: number;
   account_name: string | null;
   account_id: string;
+  admin_password_hash: string | null;
 }
 
 export interface FamilyMember {
@@ -35,13 +36,28 @@ const GIFT_EXCHANGE_COLUMNS =
 
 export function findAccount(db: D1Database, accountId: string): Promise<Account | null> {
   return db
-    .prepare('SELECT id, account_name, account_id FROM accounts WHERE account_id = ?')
+    .prepare('SELECT id, account_name, account_id, admin_password_hash FROM accounts WHERE account_id = ?')
     .bind(accountId)
     .first<Account>();
 }
 
-export async function createAccount(db: D1Database, accountName: string, accountId: string): Promise<void> {
-  await db.prepare('INSERT INTO accounts (account_name, account_id) VALUES (?, ?)').bind(accountName, accountId).run();
+export async function createAccount(
+  db: D1Database,
+  accountName: string,
+  accountId: string,
+  adminPasswordHash: string,
+): Promise<void> {
+  await db
+    .prepare('INSERT INTO accounts (account_name, account_id, admin_password_hash) VALUES (?, ?, ?)')
+    .bind(accountName, accountId, adminPasswordHash)
+    .run();
+}
+
+export async function setAdminPasswordHash(db: D1Database, accountId: string, adminPasswordHash: string): Promise<void> {
+  await db
+    .prepare('UPDATE accounts SET admin_password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE account_id = ?')
+    .bind(adminPasswordHash, accountId)
+    .run();
 }
 
 export async function listFamilyMembers(db: D1Database, accountId: string): Promise<FamilyMember[]> {

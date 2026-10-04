@@ -295,7 +295,7 @@ const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot"
   "Emissary", "Greenhand", "Life Bringer", "Herald", "Custodian", "Gearsmith",
   "Vizier", "Knight", "Physician", "Charioteer", "Iron Warrior", "Field Defender",
   "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary", "Paladin",
-  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate'];
+  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate', 'Junior Striker'];
 
 // Multi-word honorifics must be stripped before the single words inside them
 // (e.g. "Swift Healer of the Realm" before "Healer"), or the leftovers break name matching.

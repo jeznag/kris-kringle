@@ -19,6 +19,9 @@ const COPIED_LABEL = '✅ Copied!';
 // Lets the browser paint the "drawing" state before the synchronous matching algorithm blocks it.
 const PAINT_DELAY_MS = 50;
 
+// Failed writes are already reported to the user through the API error banner.
+function ignoreReportedApiError() {}
+
 const currentYear = new Date().getFullYear();
 const lastYear = currentYear - 1;
 
@@ -204,7 +207,7 @@ function renderPersonSummary(node) {
   return `
     <div class="person__summary">
       <span class="person__name">${escapeHtml(node.name || 'Unnamed elf')}</span>
-      ${node.partner ? `<span class="person__partner">&amp; ${escapeHtml(node.partner)}</span>` : ''}
+      ${node.partner ? `<span class="person__heart" aria-label="and partner">❤️</span><span class="person__name">${escapeHtml(node.partner)}</span>` : ''}
       ${type ? `<span class="badge ${type.badgeClass}">${type.label}</span>` : ''}
       ${node.participating ? '' : '<span class="badge badge--sitting-out">Sitting this one out</span>'}
     </div>
@@ -224,7 +227,7 @@ function renderPersonEditor(node) {
         <input id="${id}-name" type="text" data-field="name" value="${escapeHtml(node.name)}" />
       </div>
       <div>
-        <label for="${id}-partner">Partner</label>
+        <label for="${id}-partner">❤️ Partner</label>
         <input id="${id}-partner" type="text" data-field="partner" value="${escapeHtml(node.partner)}" />
       </div>
       <div>
@@ -245,13 +248,13 @@ function renderPersonEditor(node) {
 
 function bindPersonEditor(personEl, node) {
   const cardEl = personEl.querySelector('.person__card');
-  cardEl.querySelector('[data-action="add"]').addEventListener('click', () => addPerson(node.ID));
-  cardEl.querySelector('[data-action="remove"]').addEventListener('click', () => removePerson(node.ID));
+  cardEl.querySelector('[data-action="add"]').addEventListener('click', () => addPerson(node.ID).catch(ignoreReportedApiError));
+  cardEl.querySelector('[data-action="remove"]').addEventListener('click', () => removePerson(node.ID).catch(ignoreReportedApiError));
   cardEl.querySelectorAll('[data-field]').forEach((input) => {
     input.addEventListener('change', () => {
       node[input.dataset.field] = input.type === 'checkbox' ? input.checked : input.value;
       personEl.classList.toggle('person--sitting-out', !node.participating);
-      api.updatePersonOnServer(node);
+      api.updatePersonOnServer(node).catch(ignoreReportedApiError);
     });
   });
 }
@@ -301,18 +304,28 @@ async function addPerson(parentID) {
   newPersonEl.querySelector('[data-field="name"]').focus({ preventScroll: true });
 }
 
-function removePerson(personID) {
+async function removePerson(personID) {
+  await api.removePerson(personID);
   algo.removeNode(compiledTree, personID);
-  api.removePerson(personID);
   renderTree();
 }
 
 /* ---------- Wiring ---------- */
 
+function showApiError(message) {
+  const alertEl = document.querySelector('[data-api-error]');
+  if (!alertEl) {
+    return;
+  }
+  alertEl.textContent = message;
+  alertEl.hidden = false;
+}
+
 function listenForControls() {
   document.querySelector('#filter-results').addEventListener('input', applyResultsFilter);
   document.querySelector('#generate-results')?.addEventListener('click', displayNewSetOfResults);
-  document.querySelector('#add-top-level-person')?.addEventListener('click', () => addPerson(ROOT_PARENT_ID));
+  document.querySelector('#add-top-level-person')?.addEventListener('click', () => addPerson(ROOT_PARENT_ID).catch(ignoreReportedApiError));
+  window.addEventListener(api.API_ERROR_EVENT, (event) => showApiError(event.detail));
 
   const copyButton = document.querySelector('[data-copy-share-url]');
   copyButton?.addEventListener('click', async () => {

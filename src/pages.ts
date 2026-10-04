@@ -1,6 +1,7 @@
-import { ASSET_VERSION, FORM_FIELDS, PATHS, QUERY_PARAMS } from './constants';
+import { ASSET_VERSION, FORM_FIELDS, MIN_ADMIN_PASSWORD_LENGTH, PATHS, QUERY_PARAMS } from './constants';
 
 const FAIRY_LIGHT_COUNT = 40;
+const KANGAROO_THOUGHTS = ['Snow? In December?', "Strewth, it's 35 degrees!", "Crikey, what's this cold stuff?"];
 const ADMIN_EMAIL = 'jeremymnagel@gmail.com';
 
 const HTML_ESCAPES: Record<string, string> = {
@@ -47,6 +48,10 @@ function layout({ title, eyebrow, subtitle, body, scripts = [] }: LayoutOptions)
         <h1 class="masthead__title"><a href="/">Kris Kringle</a></h1>
         <p class="masthead__subtitle">${subtitle}</p>
         <p class="countdown" data-countdown></p>
+        <div class="roo" aria-hidden="true">
+          <p class="roo__thought">${KANGAROO_THOUGHTS.map((thought) => `<span>${thought}</span>`).join('')}</p>
+          <div class="roo__body"><span class="roo__snow-cap"></span>🦘</div>
+        </div>
       </header>
       ${body}
     </div>
@@ -54,6 +59,14 @@ function layout({ title, eyebrow, subtitle, body, scripts = [] }: LayoutOptions)
     ${scriptTags}
   </body>
 </html>`;
+}
+
+function renderAlert(message: string | undefined): string {
+  return message ? `<p class="alert" role="alert">${escapeHtml(message)}</p>` : '';
+}
+
+function passwordInput(id: string, autocomplete: 'new-password' | 'current-password'): string {
+  return `<input id="${id}" name="${FORM_FIELDS.ADMIN_PASSWORD}" type="password" minlength="${MIN_ADMIN_PASSWORD_LENGTH}" autocomplete="${autocomplete}" required />`;
 }
 
 export function krisKringleUrl(origin: string, accountId: string, isAdmin: boolean): string {
@@ -74,7 +87,7 @@ const RULES = [
   { icon: '🧸', text: 'Kids just get presents — no shopping required' },
 ];
 
-export function renderHomePage(): string {
+export function renderHomePage(errorMessage?: string): string {
   const rules = RULES.map(
     (rule) => `<li><span class="rules__icon" aria-hidden="true">${rule.icon}</span><span>${rule.text}</span></li>`,
   ).join('');
@@ -87,13 +100,18 @@ export function renderHomePage(): string {
         <p class="card__lead">We analyse your family tree and draw matches that keep everyone happy:</p>
         <ul class="rules">${rules}</ul>
       </section>
-      <section class="card">
+      <section class="card" id="sign-up">
         <h2 class="card__title"><span aria-hidden="true">✨</span> Start your family's Kris Kringle</h2>
-        <p class="card__lead">You'll get a private admin link to build your family tree and a link to share with everyone else.</p>
+        <p class="card__lead">You'll get a link to share with the family. Only someone with the admin password can change the family tree or draw names.</p>
+        ${renderAlert(errorMessage)}
         <form class="signup" action="${PATHS.ACCOUNTS}" method="post">
           <div class="signup__field">
             <label for="${FORM_FIELDS.ACCOUNT_NAME}">Family name</label>
             <input id="${FORM_FIELDS.ACCOUNT_NAME}" name="${FORM_FIELDS.ACCOUNT_NAME}" type="text" placeholder="e.g. The Claus Family" required />
+          </div>
+          <div class="signup__field">
+            <label for="new-admin-password">Admin password (${MIN_ADMIN_PASSWORD_LENGTH}+ characters)</label>
+            ${passwordInput('new-admin-password', 'new-password')}
           </div>
           <button class="button" type="submit">🎁 Create my Kris Kringle</button>
         </form>
@@ -112,7 +130,7 @@ export function renderAccountPage(origin: string, accountName: string, accountId
         <h2 class="card__title"><span aria-hidden="true">🗝️</span> Your links</h2>
         <p class="card__lead">Your unique account ID is <strong>${escapeHtml(accountId)}</strong>. Don't lose it!</p>
         <div class="share">
-          <p class="share__label"><label>Admin link — keep this one to yourself</label></p>
+          <p class="share__label"><label>Admin link — you'll need your admin password</label></p>
           <a class="share__url" href="${adminUrl}">${adminUrl}</a>
         </div>
         <div class="share">
@@ -137,11 +155,72 @@ export function renderNoAccountPage(): string {
   });
 }
 
-export function renderKrisKringlePage(origin: string, accountId: string, isAdmin: boolean): string {
+export function renderAdminLoginPage(accountName: string, accountId: string, errorMessage?: string): string {
+  return layout({
+    title: 'Head elf login — Kris Kringle',
+    eyebrow: 'Head elf mode',
+    subtitle: `Enter the admin password for ${escapeHtml(accountName || 'this Kris Kringle')}.`,
+    body: `<section class="card card--narrow">
+        <h2 class="card__title"><span aria-hidden="true">🔐</span> Head elf login</h2>
+        ${renderAlert(errorMessage)}
+        <form class="stacked-form" action="${PATHS.ADMIN_LOGIN}" method="post">
+          <input type="hidden" name="${FORM_FIELDS.ACCOUNT_ID}" value="${escapeHtml(accountId)}" />
+          <div>
+            <label for="admin-password">Admin password</label>
+            ${passwordInput('admin-password', 'current-password')}
+          </div>
+          <button class="button" type="submit">🦌 Let me in</button>
+        </form>
+      </section>`,
+  });
+}
+
+export function renderAdminUnavailablePage(): string {
+  return layout({
+    title: 'Head elf login — Kris Kringle',
+    eyebrow: 'Head elf mode',
+    subtitle: "This Kris Kringle doesn't have an admin password yet.",
+    body: `<section class="card">
+        <h2 class="card__title"><span aria-hidden="true">🔐</span> No admin password</h2>
+        <p>Email <a href="mailto:${ADMIN_EMAIL}">${ADMIN_EMAIL}</a> to get one set up.</p>
+      </section>`,
+  });
+}
+
+function renderAdminSettings(accountId: string, isPasswordChanged: boolean): string {
+  const confirmation = isPasswordChanged ? '<p class="notice" role="status">Admin password updated ✓</p>' : '';
+  return `<section class="card">
+        <h2 class="card__title"><span aria-hidden="true">🔐</span> Head elf settings</h2>
+        ${confirmation}
+        <form class="signup" action="${PATHS.ADMIN_PASSWORD}" method="post">
+          <input type="hidden" name="${FORM_FIELDS.ACCOUNT_ID}" value="${escapeHtml(accountId)}" />
+          <div class="signup__field">
+            <label for="change-admin-password">New admin password (${MIN_ADMIN_PASSWORD_LENGTH}+ characters)</label>
+            ${passwordInput('change-admin-password', 'new-password')}
+          </div>
+          <button class="button button--gold" type="submit">Change password</button>
+        </form>
+        <form class="logout" action="${PATHS.ADMIN_LOGOUT}" method="post">
+          <input type="hidden" name="${FORM_FIELDS.ACCOUNT_ID}" value="${escapeHtml(accountId)}" />
+          <button class="button button--quiet" type="submit">👋 Log out</button>
+        </form>
+      </section>`;
+}
+
+interface KrisKringlePageOptions {
+  origin: string;
+  accountId: string;
+  isAdmin: boolean;
+  isPasswordChanged: boolean;
+}
+
+export function renderKrisKringlePage({ origin, accountId, isAdmin, isPasswordChanged }: KrisKringlePageOptions): string {
   const year = new Date().getFullYear();
   const shareUrl = escapeHtml(krisKringleUrl(origin, accountId, false));
+  const adminUrl = escapeHtml(krisKringleUrl(origin, accountId, true));
   const adminControls = isAdmin
-    ? `<div class="share">
+    ? `<p class="alert alert--toast" role="alert" data-api-error hidden></p>
+        <div class="share">
           <p class="share__label"><label>Share this link with the family</label></p>
           <span class="share__url" data-share-url>${shareUrl}</span>
           <button class="button button--quiet" type="button" data-copy-share-url>📋 Copy</button>
@@ -153,6 +232,9 @@ export function renderKrisKringlePage(origin: string, accountId: string, isAdmin
   const addPersonButton = isAdmin
     ? '<button class="button button--gold" id="add-top-level-person" type="button">➕ Add a branch</button>'
     : '';
+  const footer = isAdmin
+    ? renderAdminSettings(accountId, isPasswordChanged)
+    : `<p class="admin-link"><a href="${adminUrl}">🔐 Head elf login</a></p>`;
   return layout({
     title: `Kris Kringle ${year}`,
     eyebrow: isAdmin ? 'Head elf mode' : `Christmas ${year}`,
@@ -180,7 +262,8 @@ export function renderKrisKringlePage(origin: string, accountId: string, isAdmin
         <div id="tree" class="tree" data-disabled="${!isAdmin}">
           <div class="loading">Untangling the tinsel…</div>
         </div>
-      </section>`,
+      </section>
+      ${footer}`,
     scripts: ['/js/algorithm.js', '/js/api.js', '/js/ui.js'],
   });
 }

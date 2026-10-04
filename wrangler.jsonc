@@ -15,5 +15,13 @@
       "database_id": "a8256265-256f-40fa-975f-b78a36d72584"
     }
   ],
+  "ratelimits": [
+    {
+      // Caps admin password guesses per account.
+      "name": "LOGIN_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 }
+    }
+  ],
   "observability": { "enabled": true }
 }

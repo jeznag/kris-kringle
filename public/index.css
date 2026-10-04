@@ -114,8 +114,89 @@ body {
   100% { opacity: 0.35; box-shadow: 0 2px 6px 0 var(--bulb); }
 }
 
+/* ---------- A bemused kangaroo, wondering why it's snowing ---------- */
+.roo {
+  --roo-cycle: 9s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 18px;
+}
+.roo__thought {
+  position: relative;
+  display: grid;
+  margin: 0 0 14px;
+  padding: 8px 16px;
+  background: var(--snow);
+  border-radius: 18px;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+/* Thought-bubble puffs trailing down to the roo. */
+.roo__thought::before, .roo__thought::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: var(--snow);
+}
+.roo__thought::before { width: 12px; height: 12px; bottom: -10px; left: calc(50% - 18px); }
+.roo__thought::after { width: 7px; height: 7px; bottom: -18px; left: calc(50% - 10px); }
+.roo__thought span {
+  grid-area: 1 / 1;
+  text-align: center;
+  opacity: 0;
+  animation: roo-thought calc(var(--roo-cycle) * 3) infinite;
+}
+.roo__thought span:nth-child(2) { animation-delay: var(--roo-cycle); }
+.roo__thought span:nth-child(3) { animation-delay: calc(var(--roo-cycle) * 2); }
+.roo__body {
+  position: relative;
+  font-size: 96px;
+  line-height: 1;
+  transform-origin: 50% 100%;
+  animation: roo-ponder var(--roo-cycle) ease-in-out infinite;
+}
+/* Snow settles on the roo's head until it shakes it off. */
+.roo__snow-cap {
+  /* em units keep the cap on the roo's head as the emoji scales. */
+  position: absolute;
+  top: 0.15em;
+  left: 0.16em;
+  width: 0.24em;
+  height: 0.11em;
+  border-radius: 55% 55% 35% 35%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  transform-origin: 50% 100%;
+  animation: roo-snow-cap var(--roo-cycle) ease-in infinite;
+}
+@keyframes roo-thought {
+  0%, 3% { opacity: 0; }
+  8%, 28% { opacity: 1; }
+  33%, 100% { opacity: 0; }
+}
+@keyframes roo-ponder {
+  0%, 20% { transform: rotate(0); }
+  30%, 55% { transform: rotate(6deg); }
+  65%, 74% { transform: rotate(0); }
+  77% { transform: rotate(-10deg); }
+  80% { transform: rotate(10deg); }
+  83% { transform: rotate(-7deg); }
+  86%, 100% { transform: rotate(0); }
+}
+@keyframes roo-snow-cap {
+  0% { transform: scale(0.3, 0); opacity: 1; }
+  74% { transform: scale(1, 1); opacity: 1; }
+  82% { transform: translate(-34px, -26px) rotate(-50deg) scale(0.6); opacity: 0; }
+  100% { transform: scale(0.3, 0); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .snow, .snow::after, .lights li, .loading::before { animation: none; }
+  .snow, .snow::after, .lights li, .loading::before, .roo__body, .roo__snow-cap { animation: none; }
+  .roo__thought span { animation: none; }
+  .roo__thought span:first-child { opacity: 1; }
 }
 
 /* ---------- Layout ---------- */
@@ -233,7 +314,7 @@ label {
   text-transform: uppercase;
   color: var(--ink-soft);
 }
-input[type='text'], input[type='search'], select {
+input[type='text'], input[type='search'], input[type='password'], select {
   width: 100%;
   padding: 12px 14px;
   font: 600 16px var(--font-body);
@@ -343,6 +424,34 @@ input:focus-visible, select:focus-visible, .button:focus-visible {
   margin-bottom: 8px;
 }
 .toolbar__search { flex: 1 1 260px; }
+
+/* ---------- Alerts & admin forms ---------- */
+.alert, .notice {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+}
+.alert { background: #fde4e7; border: 2px solid #f4b3bd; color: var(--cranberry-dark); }
+.alert[hidden] { display: none; }
+.alert--toast {
+  position: fixed;
+  z-index: 10;
+  left: 50%;
+  bottom: 20px;
+  width: min(560px, calc(100vw - 32px));
+  margin: 0;
+  transform: translateX(-50%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.notice { background: #e2f4e9; border: 2px solid #b5dfc6; color: #1d5e3a; }
+
+.card--narrow { max-width: 560px; margin-left: auto; margin-right: auto; }
+.stacked-form { display: grid; gap: 16px; justify-items: start; }
+.stacked-form > div { width: 100%; }
+.logout { margin-top: 18px; }
+.admin-link { text-align: center; margin: 0 0 24px; }
+.admin-link a { color: var(--gold); }
 
 /* ---------- Results: gift tags ---------- */
 .results-group { margin-top: 30px; }
@@ -495,7 +604,7 @@ input:focus-visible, select:focus-visible, .button:focus-visible {
   gap: 6px 10px;
 }
 .person__name { font-weight: 900; font-size: 18px; }
-.person__partner { font-weight: 600; color: var(--ink-soft); }
+.person__heart { font-size: 15px; line-height: 1; }
 
 .badge {
   display: inline-block;
@@ -506,7 +615,7 @@ input:focus-visible, select:focus-visible, .button:focus-visible {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.badge--kid { background: #ffe1e6; color: var(--cranberry-dark); }
+.badge--kid { background: #dcedfb; color: #1f5d8f; }
 .badge--young-adult { background: #ddf3e6; color: #1d5e3a; }
 .badge--old-guard { background: #fff0c7; color: #7a5810; }
 .badge--sitting-out { background: #e7e7e7; color: #555; }

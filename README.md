@@ -11,7 +11,15 @@ Uses a very inefficient (though slightly better now there's caching) graph searc
 
 ## Stack
 
-A Cloudflare Worker (`src/`) serves the pages and a small JSON API backed by a D1 (SQLite) database; the frontend in `public/` is served as static assets. An account's ID in the URL is its only credential: `/kris_kringle?account_id=<id>` is the family view and adding `&admin` enables editing.
+A Cloudflare Worker (`src/`) serves the pages and a small JSON API backed by a D1 (SQLite) database; the frontend in `public/` is served as static assets.
+
+Anyone with an account's ID can view it at `/kris_kringle?account_id=<id>`. Adding `&admin` asks for the account's admin password (PBKDF2-hashed, attempts rate-limited) and starts a 30-day session cookie; every write to the API requires that session. Accounts created before admin passwords existed can be given one with:
+
+```bash
+node --experimental-strip-types scripts/hash-admin-password.mjs   # prompts for the password, prints a hash
+npx wrangler d1 execute kris-kringle --remote \
+  --command "UPDATE accounts SET admin_password_hash = '<hash>' WHERE account_id = '<account id>'"
+```
 
 ## Development
 
