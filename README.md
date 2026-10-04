@@ -8,7 +8,7 @@ Generates kris kringle matches based on the following business rules.
 * 5. Any left over people should be assigned to a leftover pool
 * 6. Nobody sits out (more givers than kids) two years running unless it's unavoidable
 
-Matching runs in the browser (`public/js/algorithm.js`). "Social distance" is the number of family steps between two people: parent↔child and partner↔partner are one step each, and everyone at the top of the tree is a sibling via the family root. So siblings are 2, first cousins 4, a first cousin's partner 5. Each draw starts by requiring cousins or further and relaxes only if nothing fits, and the best of 100 draws (most total distance, fewest repeat years off) wins. Clicking a match's distance shows the path between the two people.
+Matching runs in the browser (`public/js/algorithm.js`). "Social distance" is the number of family steps between two people: parent↔child and partner↔partner are one step each, and everyone at the top of the tree is a sibling via the family root. So siblings are 2, first cousins 4, a first cousin's partner 5. Each draw starts by requiring cousins or further and relaxes only if nothing fits, and the best of 100 draws (most total distance, fewest repeat years off) wins. Clicking a match's "degrees of separation" (six degrees of Kris Kringle) shows the path between the two people.
 
 ## Stack
 
@@ -33,6 +33,8 @@ npm run typecheck
 ```
 
 ## Deploying
+
+Live at https://kriskringle.jeremynagel.info: the Worker and D1 database live in the Focus Bear/V2 Cloudflare account because that's where the `jeremynagel.info` zone is. `legacy-redirect/` keeps the original `kris-kringle.jeremyfocusbear-io-account.workers.dev` links working (`npx wrangler deploy --config legacy-redirect/wrangler.jsonc`).
 
 ```bash
 npm run db:migrate:remote

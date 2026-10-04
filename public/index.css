@@ -613,7 +613,16 @@ input:focus-visible, select:focus-visible, .button:focus-visible {
   font: 700 clamp(28px, 4vw, 36px)/1.1 var(--font-display);
   color: var(--pine);
 }
-.connection__summary { margin: 0 0 16px; font-weight: 700; }
+.connection__eyebrow {
+  margin: 0 0 6px;
+  color: var(--cranberry);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.connection__summary { margin: 0 0 4px; font-weight: 700; }
+.connection__quip { margin: 0 0 16px; color: var(--holly); font-weight: 800; font-style: italic; }
 .connection__diagram {
   overflow-x: auto;
   padding: 8px 0;

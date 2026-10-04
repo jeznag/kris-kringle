@@ -1,9 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kris-kringle",
-  "account_id": "62856630ff5a2216b88e6d73c4f4cfd0",
+  // Focus Bear/V2 account, because that's where the jeremynagel.info zone lives (Workers can
+  // only use custom domains from their own account).
+  "account_id": "f3db181aa5e95c474bda11234481eea9",
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
+  "routes": [{ "pattern": "kriskringle.jeremynagel.info", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
   "assets": {
     "directory": "public",
     "binding": "ASSETS"
@@ -12,7 +17,7 @@
     {
       "binding": "DB",
       "database_name": "kris-kringle",
-      "database_id": "a8256265-256f-40fa-975f-b78a36d72584"
+      "database_id": "44ee7428-20d5-4289-a934-91c13ac3c3d3"
     }
   ],
   "ratelimits": [

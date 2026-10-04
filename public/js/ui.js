@@ -82,9 +82,9 @@ function renderDistanceButton(exchange) {
     return '';
   }
   return `
-    <button class="tag__distance" type="button" title="See how you're connected"
+    <button class="tag__distance" type="button" title="Six degrees of Kris Kringle: see how you're connected"
       data-connection-giver="${escapeHtml(exchange.giver)}" data-connection-receiver="${escapeHtml(exchange.receiver)}">
-      🧬 ${connection.distance} steps
+      🔗 ${degreesOfSeparation(connection.distance)}
     </button>
   `;
 }
@@ -227,6 +227,25 @@ const DIAGRAM = {
 const GENERATION_CHANGE = { parent: -1, child: 1, partner: 0 };
 const PARTNER_RELATION = 'partner';
 const SHARED_ANCESTORS_LABEL = 'Shared ancestors';
+// Indexed by degrees of separation; anything further uses the last one.
+const SEPARATION_QUIPS = [
+  'Same person. Bold move.',
+  'Practically joined at the hip.',
+  'Basically the same Christmas table.',
+  'Close enough to fight over the leftovers.',
+  'Cousin territory: the Kris Kringle sweet spot.',
+  'Kevin Bacon would need a minute to get here.',
+  'Six degrees. Kevin Bacon would be proud.',
+  'Further apart than Kevin Bacon and most of Hollywood.',
+];
+
+function degreesOfSeparation(distance) {
+  return `${distance} ${distance === 1 ? 'degree' : 'degrees'} of separation`;
+}
+
+function separationQuip(distance) {
+  return SEPARATION_QUIPS[Math.min(distance, SEPARATION_QUIPS.length - 1)];
+}
 const LEFT = -1;
 const RIGHT = 1;
 
@@ -333,11 +352,11 @@ function renderConnectionDiagram(steps) {
 }
 
 function connectionSummary(connection, giver, receiver) {
-  const steps = `${connection.distance} ${connection.distance === 1 ? 'step' : 'steps'} apart`;
+  const degrees = degreesOfSeparation(connection.distance);
   if (!connection.relationship) {
-    return `${steps} in the family tree.`;
+    return `${degrees} in the family tree.`;
   }
-  return `${displayName(receiver)} is ${displayName(giver)}'s ${connection.relationship} — ${steps}.`;
+  return `${displayName(receiver)} is ${displayName(giver)}'s ${connection.relationship}: ${degrees}.`;
 }
 
 function connectionDialog() {
@@ -349,10 +368,12 @@ function connectionDialog() {
     <dialog class="connection" data-connection-dialog aria-labelledby="connection-title">
       <div class="connection__body">
         <form method="dialog"><button class="connection__close" aria-label="Close">✕</button></form>
+        <p class="connection__eyebrow">🥓 Six Degrees of Kris Kringle</p>
         <h3 class="connection__title" id="connection-title" data-connection-title></h3>
         <p class="connection__summary" data-connection-summary></p>
+        <p class="connection__quip" data-connection-quip></p>
         <div class="connection__diagram" data-connection-diagram></div>
-        <p class="connection__legend">Each line is one step: parent to child, or ❤️ between partners. More steps means a more distant (and more exciting) match.</p>
+        <p class="connection__legend">Each line is one degree of separation: parent to child, or ❤️ between partners. More degrees means a more distant (and more exciting) match.</p>
       </div>
     </dialog>
   `);
@@ -374,6 +395,7 @@ function showConnection(giver, receiver) {
   const dialog = connectionDialog();
   dialog.querySelector('[data-connection-title]').textContent = `${displayName(giver)} → ${displayName(receiver)}`;
   dialog.querySelector('[data-connection-summary]').textContent = connectionSummary(connection, giver, receiver);
+  dialog.querySelector('[data-connection-quip]').textContent = separationQuip(connection.distance);
   const diagramEl = dialog.querySelector('[data-connection-diagram]');
   diagramEl.innerHTML = renderConnectionDiagram(connection.steps);
   dialog.showModal();
