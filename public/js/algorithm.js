@@ -191,21 +191,48 @@ function greatPrefix(count) {
   return "great-".repeat(Math.max(0, count));
 }
 
-function describeBloodRelationship(ups, downs) {
-  if (ups === 0 && downs === 0) return null;
-  if (downs === 0) return ups === 1 ? "parent" : `${greatPrefix(ups - 2)}grandparent`;
-  if (ups === 0) return downs === 1 ? "child" : `${greatPrefix(downs - 2)}grandchild`;
-  if (ups === 1 && downs === 1) return "sibling";
-  if (downs === 1) return `${greatPrefix(ups - 2)}aunt or uncle`;
-  if (ups === 1) return `${greatPrefix(downs - 2)}niece or nephew`;
+const RELATIONSHIP_KINDS = {
+  PARTNER: "partner",
+  PARENT: "parent",
+  CHILD: "child",
+  SIBLING: "sibling",
+  GRANDPARENT: "grandparent",
+  GRANDCHILD: "grandchild",
+  AUNT_OR_UNCLE: "aunt-or-uncle",
+  NIECE_OR_NEPHEW: "niece-or-nephew",
+  COUSIN: "cousin"
+};
 
+function cousinLabel(ups, downs) {
   const degree = Math.min(ups, downs) - 1;
   const removed = Math.abs(ups - downs);
   const cousin = `${COUSIN_ORDINALS[degree - 1] || `${degree}th`} cousin`;
   return removed ? `${cousin} ${COUSIN_REMOVALS[removed - 1] || `${removed} times`} removed` : cousin;
 }
 
-/** Names what the last person in the path is to the first, e.g. "first cousin's partner". */
+/** Kind and everyday name of a blood relative `ups` generations up then `downs` down. */
+function classifyBloodRelationship(ups, downs) {
+  if (ups === 0 && downs === 0) return null;
+  if (downs === 0) {
+    return ups === 1
+      ? { kind: RELATIONSHIP_KINDS.PARENT, label: "parent" }
+      : { kind: RELATIONSHIP_KINDS.GRANDPARENT, label: `${greatPrefix(ups - 2)}grandparent` };
+  }
+  if (ups === 0) {
+    return downs === 1
+      ? { kind: RELATIONSHIP_KINDS.CHILD, label: "child" }
+      : { kind: RELATIONSHIP_KINDS.GRANDCHILD, label: `${greatPrefix(downs - 2)}grandchild` };
+  }
+  if (ups === 1 && downs === 1) return { kind: RELATIONSHIP_KINDS.SIBLING, label: "sibling" };
+  if (downs === 1) return { kind: RELATIONSHIP_KINDS.AUNT_OR_UNCLE, label: `${greatPrefix(ups - 2)}aunt or uncle` };
+  if (ups === 1) return { kind: RELATIONSHIP_KINDS.NIECE_OR_NEPHEW, label: `${greatPrefix(downs - 2)}niece or nephew` };
+  return { kind: RELATIONSHIP_KINDS.COUSIN, label: cousinLabel(ups, downs) };
+}
+
+/**
+ * What the last person in the path is to the first: { label, kind, isInLaw }, e.g.
+ * { label: "first cousin's partner", kind: "cousin", isInLaw: true }. Null if it has no everyday name.
+ */
 function describeRelationship(path) {
   const relations = path.slice(1).map(step => step.relation);
   const startsWithPartner = relations[0] === RELATIONS.PARTNER;
@@ -222,12 +249,14 @@ function describeRelationship(path) {
   if (!isClimbThenDescend) {
     return null;
   }
-  const parts = [
-    startsWithPartner && RELATIONS.PARTNER,
-    describeBloodRelationship(ups, downs),
-    endsWithPartner && RELATIONS.PARTNER
-  ].filter(Boolean);
-  return parts.length ? parts.join("'s ") : null;
+  const blood = classifyBloodRelationship(ups, downs);
+  if (!blood) {
+    return startsWithPartner ? { label: RELATIONS.PARTNER, kind: RELATIONSHIP_KINDS.PARTNER, isInLaw: false } : null;
+  }
+  const label = [startsWithPartner && RELATIONS.PARTNER, blood.label, endsWithPartner && RELATIONS.PARTNER]
+    .filter(Boolean)
+    .join("'s ");
+  return { label, kind: blood.kind, isInLaw: startsWithPartner || endsWithPartner };
 }
 
 /** How two people are related, for showing to humans. Always reflects the tree as it is now. */
@@ -236,7 +265,14 @@ function getConnection(tree, from, to) {
   if (!steps) {
     return null;
   }
-  return { steps, distance: steps.length - 1, relationship: describeRelationship(steps) };
+  const relationship = describeRelationship(steps);
+  return {
+    steps,
+    distance: steps.length - 1,
+    relationship: relationship ? relationship.label : null,
+    relationshipKind: relationship ? relationship.kind : null,
+    isInLaw: relationship ? relationship.isInLaw : false
+  };
 }
 
 // Caches are per tree object; run() clears its tree's entry so edits made in the page are seen.
@@ -645,6 +681,7 @@ function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPr
 const facade = {
   NO_RECIPIENT,
   FAMILY_ROOT,
+  RELATIONSHIP_KINDS,
   run,
   getSocialDistance,
   getConnection,

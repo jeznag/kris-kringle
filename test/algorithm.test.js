@@ -127,6 +127,25 @@ describe('getConnection', () => {
     });
   });
 
+  const kinds = [
+    ['Jeremy Nagel', 'Sandy Xu', algo.RELATIONSHIP_KINDS.PARTNER, false],
+    ['Jeremy Nagel', 'Alice Nagel', algo.RELATIONSHIP_KINDS.SIBLING, false],
+    ['Sandy Xu', 'Judy McGannon', algo.RELATIONSHIP_KINDS.PARENT, true],
+    ['Judy McGannon', 'Sean', algo.RELATIONSHIP_KINDS.GRANDCHILD, false],
+    ['Jeremy Nagel', 'Jane Fleming', algo.RELATIONSHIP_KINDS.AUNT_OR_UNCLE, false],
+    // A great-aunt and great-nephew are as far apart as first cousins, but not cousins.
+    ['Jane Fleming', 'Sean', algo.RELATIONSHIP_KINDS.NIECE_OR_NEPHEW, false],
+    ['Jeremy Nagel', 'Ruby Fleming', algo.RELATIONSHIP_KINDS.COUSIN, false],
+    ['Alice Nagel', 'Ash', algo.RELATIONSHIP_KINDS.COUSIN, true],
+  ];
+  kinds.forEach(([from, to, expectedKind, expectedInLaw]) => {
+    it(`classifies ${to} to ${from} as ${expectedKind}${expectedInLaw ? ' (in-law)' : ''}`, () => {
+      const connection = algo.getConnection(tree, from, to);
+      assert.equal(connection.relationshipKind, expectedKind);
+      assert.equal(connection.isInLaw, expectedInLaw);
+    });
+  });
+
   it('reflects edits to the tree immediately', () => {
     assert.equal(algo.getConnection(tree, 'Jeremy Nagel', 'Grace').distance, 5);
     algo.findNode(tree, 'Fred Fleming').partner = 'Grace Smith';

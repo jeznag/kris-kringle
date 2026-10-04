@@ -227,13 +227,27 @@ const DIAGRAM = {
 const GENERATION_CHANGE = { parent: -1, child: 1, partner: 0 };
 const PARTNER_RELATION = 'partner';
 const SHARED_ANCESTORS_LABEL = 'Shared ancestors';
+const RELATIONSHIP_QUIPS = {
+  [algo.RELATIONSHIP_KINDS.PARTNER]: 'Partners in crime. (This should never happen.)',
+  [algo.RELATIONSHIP_KINDS.PARENT]: 'Buying for the people who bought you everything.',
+  [algo.RELATIONSHIP_KINDS.CHILD]: 'Parental spoiling rights: activated.',
+  [algo.RELATIONSHIP_KINDS.SIBLING]: 'Sibling rivalry: gift edition.',
+  [algo.RELATIONSHIP_KINDS.GRANDPARENT]: 'Hard to buy for since forever.',
+  [algo.RELATIONSHIP_KINDS.GRANDCHILD]: 'Grandparent spoiling rights: activated.',
+  [algo.RELATIONSHIP_KINDS.AUNT_OR_UNCLE]: "Time to prove you're the favourite niece or nephew.",
+  [algo.RELATIONSHIP_KINDS.NIECE_OR_NEPHEW]: 'Fun aunty and uncle duties: activated.',
+  [algo.RELATIONSHIP_KINDS.COUSIN]: 'Cousin territory: the Kris Kringle sweet spot.',
+};
+const IN_LAW_QUIP = 'In-law diplomacy at its finest.';
+// From here on the path is long enough that Kevin Bacon gets the credit, whoever's involved.
+const KEVIN_BACON_DISTANCE = 5;
 // Indexed by degrees of separation; anything further uses the last one.
-const SEPARATION_QUIPS = [
+const KEVIN_BACON_QUIPS = [
   'Same person. Bold move.',
   'Practically joined at the hip.',
   'Basically the same Christmas table.',
   'Close enough to fight over the leftovers.',
-  'Cousin territory: the Kris Kringle sweet spot.',
+  'Just the right amount of related.',
   'Kevin Bacon would need a minute to get here.',
   'Six degrees. Kevin Bacon would be proud.',
   'Further apart than Kevin Bacon and most of Hollywood.',
@@ -243,8 +257,17 @@ function degreesOfSeparation(distance) {
   return `${distance} ${distance === 1 ? 'degree' : 'degrees'} of separation`;
 }
 
-function separationQuip(distance) {
-  return SEPARATION_QUIPS[Math.min(distance, SEPARATION_QUIPS.length - 1)];
+/** A quip that fits the relationship, falling back to Kevin Bacon for long or unnamed paths. */
+function separationQuip(connection) {
+  const { distance, relationshipKind, isInLaw } = connection;
+  const kevinBaconQuip = KEVIN_BACON_QUIPS[Math.min(distance, KEVIN_BACON_QUIPS.length - 1)];
+  if (!relationshipKind) {
+    return kevinBaconQuip;
+  }
+  if (!isInLaw) {
+    return RELATIONSHIP_QUIPS[relationshipKind];
+  }
+  return distance < KEVIN_BACON_DISTANCE ? IN_LAW_QUIP : kevinBaconQuip;
 }
 const LEFT = -1;
 const RIGHT = 1;
@@ -395,7 +418,7 @@ function showConnection(giver, receiver) {
   const dialog = connectionDialog();
   dialog.querySelector('[data-connection-title]').textContent = `${displayName(giver)} → ${displayName(receiver)}`;
   dialog.querySelector('[data-connection-summary]').textContent = connectionSummary(connection, giver, receiver);
-  dialog.querySelector('[data-connection-quip]').textContent = separationQuip(connection.distance);
+  dialog.querySelector('[data-connection-quip]').textContent = separationQuip(connection);
   const diagramEl = dialog.querySelector('[data-connection-diagram]');
   diagramEl.innerHTML = renderConnectionDiagram(connection.steps);
   dialog.showModal();
