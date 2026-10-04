@@ -1,7 +1,7 @@
 const CATEGORIES = [
   { title: 'Kids', icon: '🧸', giverType: 'old guard', receiverType: 'kid' },
   { title: 'Young Adults', icon: '🎓', giverType: 'young adult', receiverType: 'young adult' },
-  { title: 'Old Guard', icon: '🍷', giverType: 'old guard', receiverType: 'old guard' },
+  { title: 'Old Guard', icon: '🎅', giverType: 'old guard', receiverType: 'old guard' },
 ];
 
 const FAMILY_MEMBER_TYPES = [
@@ -71,13 +71,26 @@ function lastYearReceiverFor(exchange, category) {
   if (exchange.exchangeFromLastYear?.receiver) {
     return exchange.exchangeFromLastYear.receiver;
   }
-  const lastYearExchange = algo.getExchangeDataForGiver(exchange.giver, category.receiverType, exchangesFor(lastYearExchanges, category));
+  const lastYearExchange = algo.getExchangeDataForGiver(exchange.giver, exchangesFor(lastYearExchanges, category));
   return lastYearExchange?.receiver || NEWCOMER_LABEL;
+}
+
+function renderDistanceButton(exchange) {
+  // Computed from the tree as it is now, so it always matches the diagram it opens.
+  const connection = algo.getConnection(compiledTree, exchange.giver, exchange.receiver);
+  if (!connection) {
+    return '';
+  }
+  return `
+    <button class="tag__distance" type="button" title="See how you're connected"
+      data-connection-giver="${escapeHtml(exchange.giver)}" data-connection-receiver="${escapeHtml(exchange.receiver)}">
+      🧬 ${connection.distance} steps
+    </button>
+  `;
 }
 
 function renderTag(exchange, category) {
   const isYearOff = exchange.receiver === algo.NO_RECIPIENT;
-  const hasDistance = exchange.socialDistance !== null && exchange.socialDistance !== undefined && Number(exchange.socialDistance) >= 0;
   const lastYearReceiver = lastYearReceiverFor(exchange, category);
   return `
     <article class="tag${isYearOff ? ' tag--year-off' : ''}"
@@ -88,7 +101,7 @@ function renderTag(exchange, category) {
       <strong class="tag__receiver">${escapeHtml(isYearOff ? YEAR_OFF_LABEL : exchange.receiver)}</strong>
       <div class="tag__meta">
         <span>Last year: ${escapeHtml(lastYearReceiver === algo.NO_RECIPIENT ? 'nobody' : lastYearReceiver)}</span>
-        ${hasDistance ? `<span title="Genetic distance">🧬 ${escapeHtml(exchange.socialDistance)}</span>` : ''}
+        ${isYearOff ? '' : renderDistanceButton(exchange)}
       </div>
     </article>
   `;
@@ -194,6 +207,178 @@ function applyResultsFilter() {
   document.querySelectorAll('#results .tag').forEach((tag) => {
     tag.hidden = Boolean(query) && !tag.dataset.giver.includes(query) && !tag.dataset.receiver.includes(query);
   });
+}
+
+/* ---------- How are we connected? ---------- */
+
+const DIAGRAM = {
+  COLUMN_WIDTH: 128,
+  ROW_HEIGHT: 92,
+  NODE_WIDTH: 116,
+  NODE_HEIGHT: 52,
+  NODE_RADIUS: 12,
+  PADDING: 12,
+  LINE_HEIGHT: 16,
+  MAX_LINE_LENGTH: 15,
+  MAX_LINES: 2,
+  // Below this the names get too small to read on a phone, so the diagram scrolls instead.
+  MIN_SCALE: 0.75,
+};
+const GENERATION_CHANGE = { parent: -1, child: 1, partner: 0 };
+const PARTNER_RELATION = 'partner';
+const SHARED_ANCESTORS_LABEL = 'Shared ancestors';
+const LEFT = -1;
+const RIGHT = 1;
+
+function displayName(person) {
+  return person === algo.FAMILY_ROOT ? SHARED_ANCESTORS_LABEL : algo.cleanName(person);
+}
+
+function wrapLabel(text) {
+  const lines = [];
+  text.split(' ').forEach((word) => {
+    const lastLine = lines[lines.length - 1];
+    if (lastLine && `${lastLine} ${word}`.length <= DIAGRAM.MAX_LINE_LENGTH) {
+      lines[lines.length - 1] = `${lastLine} ${word}`;
+    } else {
+      lines.push(word);
+    }
+  });
+  const visibleLines = lines.slice(0, DIAGRAM.MAX_LINES);
+  if (lines.length > DIAGRAM.MAX_LINES) {
+    visibleLines[DIAGRAM.MAX_LINES - 1] += '…';
+  }
+  return visibleLines;
+}
+
+/**
+ * Lays the path out like a family tree: the highest ancestor on top, the giver's side going
+ * down on the left and the receiver's on the right, one row per generation. Partners sit
+ * beside the person they're with, so most paths need only three columns.
+ */
+function layoutConnection(steps) {
+  let generation = 0;
+  const nodes = steps.map((step) => {
+    generation += step.relation ? GENERATION_CHANGE[step.relation] : 0;
+    return { ...step, generation, column: 0 };
+  });
+  const topGeneration = Math.min(...nodes.map((node) => node.generation));
+  const apexIndex = nodes.findIndex((node) => node.generation === topGeneration);
+
+  const placeBranch = (indexes, direction, linkRelation) => {
+    let column = 0;
+    indexes.forEach((index, offset) => {
+      const isFirstOffApex = offset === 0;
+      column += isFirstOffApex || linkRelation(index) === PARTNER_RELATION ? direction : 0;
+      nodes[index].column = column;
+    });
+  };
+  const leftIndexes = nodes.map((_, index) => index).slice(0, apexIndex).reverse();
+  const rightIndexes = nodes.map((_, index) => index).slice(apexIndex + 1);
+  // A node's link to its apex-side neighbour: on the left that's the step after it, on the right its own step.
+  placeBranch(leftIndexes, LEFT, (index) => nodes[index + 1].relation);
+  placeBranch(rightIndexes, RIGHT, (index) => nodes[index].relation);
+
+  const leftmostColumn = Math.min(...nodes.map((node) => node.column));
+  return nodes.map((node) => ({ ...node, column: node.column - leftmostColumn, row: node.generation - topGeneration }));
+}
+
+function connectionNodeRole(index, nodes) {
+  if (index === 0) return 'giver';
+  if (index === nodes.length - 1) return 'receiver';
+  return nodes[index].row === 0 ? 'ancestor' : 'relative';
+}
+
+function renderConnectionDiagram(steps) {
+  const nodes = layoutConnection(steps);
+  const columns = Math.max(...nodes.map((node) => node.column)) + 1;
+  const rows = Math.max(...nodes.map((node) => node.row)) + 1;
+  const width = DIAGRAM.PADDING * 2 + (columns - 1) * DIAGRAM.COLUMN_WIDTH + DIAGRAM.NODE_WIDTH;
+  const height = DIAGRAM.PADDING * 2 + (rows - 1) * DIAGRAM.ROW_HEIGHT + DIAGRAM.NODE_HEIGHT;
+  const centreOf = (node) => ({
+    x: DIAGRAM.PADDING + node.column * DIAGRAM.COLUMN_WIDTH + DIAGRAM.NODE_WIDTH / 2,
+    y: DIAGRAM.PADDING + node.row * DIAGRAM.ROW_HEIGHT + DIAGRAM.NODE_HEIGHT / 2,
+  });
+
+  const linkedPairs = nodes.slice(1).map((node, index) => ({
+    from: centreOf(nodes[index]),
+    to: centreOf(node),
+    isPartnerLink: node.relation === PARTNER_RELATION,
+  }));
+  const links = linkedPairs.map(({ from, to, isPartnerLink }) =>
+    `<line class="connection-link${isPartnerLink ? ' connection-link--partner' : ''}" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" />`);
+  // Drawn after the boxes so each heart sits on top of the gap between partners.
+  const hearts = linkedPairs
+    .filter(({ isPartnerLink }) => isPartnerLink)
+    .map(({ from, to }) => `<text class="connection-link__heart" x="${(from.x + to.x) / 2}" y="${from.y}">❤️</text>`);
+
+  const boxes = nodes.map((node, index) => {
+    const { x, y } = centreOf(node);
+    const lines = wrapLabel(displayName(node.person));
+    const firstLineY = y - ((lines.length - 1) * DIAGRAM.LINE_HEIGHT) / 2;
+    const text = lines
+      .map((line, lineIndex) => `<tspan x="${x}" y="${firstLineY + lineIndex * DIAGRAM.LINE_HEIGHT}">${escapeHtml(line)}</tspan>`)
+      .join('');
+    return `
+      <g class="connection-node connection-node--${connectionNodeRole(index, nodes)}">
+        <title>${escapeHtml(node.person === algo.FAMILY_ROOT ? SHARED_ANCESTORS_LABEL : node.person)}</title>
+        <rect x="${x - DIAGRAM.NODE_WIDTH / 2}" y="${y - DIAGRAM.NODE_HEIGHT / 2}" width="${DIAGRAM.NODE_WIDTH}" height="${DIAGRAM.NODE_HEIGHT}" rx="${DIAGRAM.NODE_RADIUS}" />
+        <text>${text}</text>
+      </g>
+    `;
+  });
+
+  const sizing = `width: max(100%, ${Math.round(width * DIAGRAM.MIN_SCALE)}px); max-width: ${width}px`;
+  return `<svg class="connection__svg" viewBox="0 0 ${width} ${height}" style="${sizing}" role="img" aria-label="Family path">${links.join('')}${boxes.join('')}${hearts.join('')}</svg>`;
+}
+
+function connectionSummary(connection, giver, receiver) {
+  const steps = `${connection.distance} ${connection.distance === 1 ? 'step' : 'steps'} apart`;
+  if (!connection.relationship) {
+    return `${steps} in the family tree.`;
+  }
+  return `${displayName(receiver)} is ${displayName(giver)}'s ${connection.relationship} — ${steps}.`;
+}
+
+function connectionDialog() {
+  const existingDialog = document.querySelector('[data-connection-dialog]');
+  if (existingDialog) {
+    return existingDialog;
+  }
+  document.body.insertAdjacentHTML('beforeend', `
+    <dialog class="connection" data-connection-dialog aria-labelledby="connection-title">
+      <div class="connection__body">
+        <form method="dialog"><button class="connection__close" aria-label="Close">✕</button></form>
+        <h3 class="connection__title" id="connection-title" data-connection-title></h3>
+        <p class="connection__summary" data-connection-summary></p>
+        <div class="connection__diagram" data-connection-diagram></div>
+        <p class="connection__legend">Each line is one step: parent to child, or ❤️ between partners. More steps means a more distant (and more exciting) match.</p>
+      </div>
+    </dialog>
+  `);
+  const dialog = document.querySelector('[data-connection-dialog]');
+  // Clicks on the backdrop land on the dialog itself; clicks inside land on .connection__body.
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) {
+      dialog.close();
+    }
+  });
+  return dialog;
+}
+
+function showConnection(giver, receiver) {
+  const connection = algo.getConnection(compiledTree, giver, receiver);
+  if (!connection) {
+    return;
+  }
+  const dialog = connectionDialog();
+  dialog.querySelector('[data-connection-title]').textContent = `${displayName(giver)} → ${displayName(receiver)}`;
+  dialog.querySelector('[data-connection-summary]').textContent = connectionSummary(connection, giver, receiver);
+  const diagramEl = dialog.querySelector('[data-connection-diagram]');
+  diagramEl.innerHTML = renderConnectionDiagram(connection.steps);
+  dialog.showModal();
+  // On narrow screens wide diagrams scroll; start centred on the shared ancestor.
+  diagramEl.scrollLeft = (diagramEl.scrollWidth - diagramEl.clientWidth) / 2;
 }
 
 /* ---------- Family tree ---------- */
@@ -323,6 +508,12 @@ function showApiError(message) {
 
 function listenForControls() {
   document.querySelector('#filter-results').addEventListener('input', applyResultsFilter);
+  document.querySelector('#results').addEventListener('click', (event) => {
+    const distanceButton = event.target.closest('[data-connection-giver]');
+    if (distanceButton) {
+      showConnection(distanceButton.dataset.connectionGiver, distanceButton.dataset.connectionReceiver);
+    }
+  });
   document.querySelector('#generate-results')?.addEventListener('click', displayNewSetOfResults);
   document.querySelector('#add-top-level-person')?.addEventListener('click', () => addPerson(ROOT_PARENT_ID).catch(ignoreReportedApiError));
   window.addEventListener(api.API_ERROR_EVENT, (event) => showApiError(event.detail));

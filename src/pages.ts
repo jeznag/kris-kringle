@@ -83,7 +83,7 @@ const RULES = [
   { icon: '🔁', text: 'No swaps: if Bob gives to Jane, Jane can’t give to Bob' },
   { icon: '📅', text: 'Never the same person two years running' },
   { icon: '🎓', text: 'Young adults only give to each other (they’re broke)' },
-  { icon: '🍷', text: 'The old guard buy for each other and for the kids' },
+  { icon: '🎅', text: 'The old guard buy for each other and for the kids' },
   { icon: '🧸', text: 'Kids just get presents — no shopping required' },
 ];
 

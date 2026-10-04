@@ -48,4 +48,4 @@ export const ADMIN_SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 export const MIN_ADMIN_PASSWORD_LENGTH = 8;
 
 // Bump when public/js or public/index.css change so browsers drop cached copies.
-export const ASSET_VERSION = '2026.2';
+export const ASSET_VERSION = '2026.3';

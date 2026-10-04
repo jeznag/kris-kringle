@@ -6,8 +6,9 @@ Generates kris kringle matches based on the following business rules.
 * 3. No recursive gift giving allowed
 * 4. Financial situation should be respected so that young adults don't have to buy too many gifts
 * 5. Any left over people should be assigned to a leftover pool
+* 6. Nobody sits out (more givers than kids) two years running unless it's unavoidable
 
-Uses a very inefficient (though slightly better now there's caching) graph searching approach to find matches based on social distance. The matching runs in the browser (`public/js/algorithm.js`).
+Matching runs in the browser (`public/js/algorithm.js`). "Social distance" is the number of family steps between two people: parent↔child and partner↔partner are one step each, and everyone at the top of the tree is a sibling via the family root. So siblings are 2, first cousins 4, a first cousin's partner 5. Each draw starts by requiring cousins or further and relaxes only if nothing fits, and the best of 100 draws (most total distance, fewest repeat years off) wins. Clicking a match's distance shows the path between the two people.
 
 ## Stack
 
@@ -27,7 +28,7 @@ npx wrangler d1 execute kris-kringle --remote \
 npm install
 npm run db:migrate:local
 npm run dev          # http://localhost:8787
-npm test             # algorithm tests
+npm test             # algorithm unit tests (node:test)
 npm run typecheck
 ```
 
