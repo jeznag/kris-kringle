@@ -1,0 +1,38 @@
+export const QUERY_PARAMS = {
+  ACCOUNT_ID: 'account_id',
+  ADMIN: 'admin',
+} as const;
+
+export const PATHS = {
+  HOME: '/',
+  ACCOUNTS: '/accounts',
+  KRIS_KRINGLE: '/kris_kringle',
+  FAMILY_MEMBERS_JSON: '/family_members.json',
+  GIFT_EXCHANGES_JSON: '/gift_exchanges.json',
+} as const;
+
+// Matches /accounts/<account_id>
+export const ACCOUNT_PAGE_PATTERN = /^\/accounts\/([A-Za-z0-9]+)$/;
+// Matches /family_members/<id>.json
+export const FAMILY_MEMBER_JSON_PATTERN = /^\/family_members\/(\d+)\.json$/;
+
+export const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  SEE_OTHER: 303,
+  BAD_REQUEST: 400,
+  NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
+} as const;
+
+export const ACCOUNT_ID_LENGTH = 24;
+// Same alphabet as Ruby's SecureRandom.base58, which generated the legacy IDs.
+export const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+export const FORM_FIELDS = {
+  ACCOUNT_NAME: 'account_name',
+} as const;
+
+// Bump when public/js or public/index.css change so browsers drop cached copies.
+export const ASSET_VERSION = '2026.1';

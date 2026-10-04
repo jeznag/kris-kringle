@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kris-kringle",
+  "account_id": "62856630ff5a2216b88e6d73c4f4cfd0",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kris-kringle",
+      "database_id": "a8256265-256f-40fa-975f-b78a36d72584"
+    }
+  ],
+  "observability": { "enabled": true }
+}

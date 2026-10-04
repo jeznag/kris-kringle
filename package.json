@@ -1,5 +1,16 @@
 {
   "name": "kriskringle",
   "private": true,
-  "dependencies": {}
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node public/js/tests/algorithm.js",
+    "typecheck": "wrangler types && tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply kris-kringle --local",
+    "db:migrate:remote": "wrangler d1 migrations apply kris-kringle --remote"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "wrangler": "^4.147.0"
+  }
 }

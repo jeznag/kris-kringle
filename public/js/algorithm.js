@@ -297,6 +297,10 @@ const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot"
   "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary", "Paladin",
   "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate'];
 
+// Multi-word honorifics must be stripped before the single words inside them
+// (e.g. "Swift Healer of the Realm" before "Healer"), or the leftovers break name matching.
+const honorificsLongestFirst = [...honorifics].sort((a, b) => b.length - a.length);
+
 const cleanedNameCache = {};
 
 function cleanName(name) {
@@ -305,7 +309,7 @@ function cleanName(name) {
   }
   
   let cleanedName = name;
-  honorifics.forEach(honorific => {
+  honorificsLongestFirst.forEach(honorific => {
     const regex = new RegExp(`\\b${honorific}\\b`, 'gi');
     cleanedName = cleanedName.replace(regex, '').trim();
   });
@@ -818,6 +822,7 @@ function generateMatches(
 }
 
 const facade = {
+  NO_RECIPIENT,
   run,
   dfs,
   bfs,
