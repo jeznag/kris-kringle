@@ -1,421 +1,734 @@
-/* ====== Kris Kringle – Clean Xmas Theme (Consolidated) ====== */
+/* ====== Kris Kringle — Midnight Pine theme ====== */
+@import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;800;900&display=swap');
 
-/* System sizing */
-html { box-sizing: border-box; }
-*, *::before, *::after { box-sizing: inherit; }
+:root {
+  --night: #071a13;
+  --pine: #0f3326;
+  --pine-light: #1b4d3a;
+  --holly: #2e8b57;
+  --holly-light: #6fcf97;
+  --cranberry: #c8102e;
+  --cranberry-dark: #8e0b20;
+  --gold: #f2c14e;
+  --gold-deep: #c9952b;
+  --snow: #fffaf0;
+  --frost: #eef6f2;
+  --ink: #1d1a17;
+  --ink-soft: #5a6660;
+  --line: #e2d9c6;
 
-/* Palette */
-:root{
-  --green:#0f5132;
-  --red:#c62828;
-  --gold:#d4a017;
-  --ink:#10221b;
-  --card:#ffffff;
-  --cardLine:#dfe9e5;
-  --mutedLine:#e9f2ee;
-  --page:#162c26; /* flat, no texture */
+  --font-display: 'Mountains of Christmas', 'Georgia', serif;
+  --font-body: 'Nunito', 'Trebuchet MS', sans-serif;
+
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --shadow-card: 0 18px 40px rgba(0, 0, 0, 0.35), 0 2px 0 rgba(255, 255, 255, 0.6) inset;
+  --gutter: clamp(16px, 4vw, 40px);
+  --tree-indent: clamp(12px, 2.4vw, 22px);
 }
 
-/* Base typography (ditch monospace everywhere) */
-body, input, button, select, textarea, table, th, td, label {
-  font: 16px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--night); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font: 400 17px/1.55 var(--font-body);
   color: var(--ink);
-}
-
-/* Page */
-html, body { height: 100%; }
-body{
-  margin:0;
-  background: var(--page);
-  text-shadow: none;
-}
-
-/* Container card */
-.container{
-  max-width: min(1200px, 95vw);
-  margin: clamp(16px, 4vw, 48px) auto;
-  padding: clamp(16px, 3vw, 36px);
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.25);
-  position: relative;
-  overflow: visible; /* avoid clipping children */
-}
-
-/* Garland (static, subtle) */
-.container::before,
-.container::after{
-  content:"";
-  position:absolute; left:0; right:0; height:10px;
   background:
-    radial-gradient(circle at 10% 50%, var(--red) 0 3px, transparent 4px),
-    radial-gradient(circle at 30% 50%, var(--gold) 0 3px, transparent 4px),
-    radial-gradient(circle at 50% 50%, #5ad0ff 0 3px, transparent 4px),
-    radial-gradient(circle at 70% 50%, #ff7aa0 0 3px, transparent 4px),
-    radial-gradient(circle at 90% 50%, #b5ff7a 0 3px, transparent 4px),
-    linear-gradient(#0b3d2e,#0b3d2e);
-  background-size: 70px 10px, 70px 10px, 70px 10px, 70px 10px, 70px 10px, 100% 10px;
-  background-position: 0 0, 14px 0, 28px 0, 42px 0, 56px 0, 0 0;
-  filter: drop-shadow(0 2px 0 rgba(0,0,0,.25));
+    radial-gradient(1200px 600px at 80% -10%, rgba(242, 193, 78, 0.12), transparent 60%),
+    radial-gradient(900px 500px at 0% 10%, rgba(46, 139, 87, 0.25), transparent 60%),
+    linear-gradient(180deg, var(--night) 0%, var(--pine) 55%, var(--night) 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
 }
-.container::before{ top:0; border-top-left-radius:24px; border-top-right-radius:24px; }
-.container::after{ bottom:0; border-bottom-left-radius:24px; border-bottom-right-radius:24px; }
 
-/* Headings */
-h1,h2,h3{ margin:0 0 .6rem; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.35); }
-p, button {
-  color: #fff;
+/* ---------- Snowfall (pure CSS, two parallax layers) ---------- */
+.snow, .snow::after {
+  position: fixed;
+  inset: -100vh 0 0 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(3px 3px at 20px 30px, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 90px 120px, rgba(255, 255, 255, 0.85) 50%, transparent 51%),
+    radial-gradient(4px 4px at 160px 60px, rgba(255, 255, 255, 0.9) 50%, transparent 51%),
+    radial-gradient(2px 2px at 230px 180px, #fff 50%, transparent 51%),
+    radial-gradient(3px 3px at 300px 90px, rgba(255, 255, 255, 0.7) 50%, transparent 51%);
+  background-size: 320px 220px;
+  animation: snowfall 18s linear infinite;
+  opacity: 0.55;
 }
-h1{
-  font-size: clamp(28px,4.2vw,48px);
+.snow::after {
+  content: '';
+  inset: 0;
+  background-size: 210px 160px;
+  animation-duration: 11s;
+  opacity: 0.8;
+  filter: blur(0.6px);
+}
+@keyframes snowfall {
+  from { transform: translateY(0); }
+  to { transform: translateY(100vh); }
+}
+
+/* ---------- Fairy lights ---------- */
+.lights {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 10px var(--gutter) 0;
+  list-style: none;
+  overflow: hidden;
+  border-top: 3px solid #0b2219;
+}
+.lights li {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bulb);
+  box-shadow: 0 4px 18px 3px var(--bulb);
+  animation: twinkle 2.4s ease-in-out infinite alternate;
+}
+.lights li::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 6px;
+  margin: -6px auto 0;
+  border-radius: 2px;
+  background: #24372f;
+}
+.lights li:nth-child(4n + 1) { --bulb: var(--cranberry); }
+.lights li:nth-child(4n + 2) { --bulb: var(--gold); animation-delay: 0.6s; }
+.lights li:nth-child(4n + 3) { --bulb: var(--holly-light); animation-delay: 1.2s; }
+.lights li:nth-child(4n + 4) { --bulb: #7cc6ff; animation-delay: 1.8s; }
+@keyframes twinkle {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0.35; box-shadow: 0 2px 6px 0 var(--bulb); }
+}
+
+/* ---------- A bemused kangaroo, wondering why it's snowing ---------- */
+.roo {
+  --roo-cycle: 9s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 18px;
+}
+.roo__thought {
+  position: relative;
+  display: grid;
+  margin: 0 0 14px;
+  padding: 8px 16px;
+  background: var(--snow);
+  border-radius: 18px;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+/* Thought-bubble puffs trailing down to the roo. */
+.roo__thought::before, .roo__thought::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: var(--snow);
+}
+.roo__thought::before { width: 12px; height: 12px; bottom: -10px; left: calc(50% - 18px); }
+.roo__thought::after { width: 7px; height: 7px; bottom: -18px; left: calc(50% - 10px); }
+.roo__thought span {
+  grid-area: 1 / 1;
+  text-align: center;
+  opacity: 0;
+  animation: roo-thought calc(var(--roo-cycle) * 3) infinite;
+}
+.roo__thought span:nth-child(2) { animation-delay: var(--roo-cycle); }
+.roo__thought span:nth-child(3) { animation-delay: calc(var(--roo-cycle) * 2); }
+.roo__body {
+  position: relative;
+  font-size: 96px;
+  line-height: 1;
+  transform-origin: 50% 100%;
+  animation: roo-ponder var(--roo-cycle) ease-in-out infinite;
+}
+/* Snow settles on the roo's head until it shakes it off. */
+.roo__snow-cap {
+  /* em units keep the cap on the roo's head as the emoji scales. */
+  position: absolute;
+  top: 0.15em;
+  left: 0.16em;
+  width: 0.24em;
+  height: 0.11em;
+  border-radius: 55% 55% 35% 35%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  transform-origin: 50% 100%;
+  animation: roo-snow-cap var(--roo-cycle) ease-in infinite;
+}
+@keyframes roo-thought {
+  0%, 3% { opacity: 0; }
+  8%, 28% { opacity: 1; }
+  33%, 100% { opacity: 0; }
+}
+@keyframes roo-ponder {
+  0%, 20% { transform: rotate(0); }
+  30%, 55% { transform: rotate(6deg); }
+  65%, 74% { transform: rotate(0); }
+  77% { transform: rotate(-10deg); }
+  80% { transform: rotate(10deg); }
+  83% { transform: rotate(-7deg); }
+  86%, 100% { transform: rotate(0); }
+}
+@keyframes roo-snow-cap {
+  0% { transform: scale(0.3, 0); opacity: 1; }
+  74% { transform: scale(1, 1); opacity: 1; }
+  82% { transform: translate(-34px, -26px) rotate(-50deg) scale(0.6); opacity: 0; }
+  100% { transform: scale(0.3, 0); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snow, .snow::after, .lights li, .loading::before, .roo__body, .roo__snow-cap { animation: none; }
+  .roo__thought span { animation: none; }
+  .roo__thought span:first-child { opacity: 1; }
+}
+
+/* ---------- Layout ---------- */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 var(--gutter) 64px;
+}
+
+.masthead {
+  text-align: center;
+  padding: clamp(28px, 6vw, 64px) 0 clamp(20px, 4vw, 36px);
+  color: var(--snow);
+}
+.masthead__eyebrow {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 14px;
+  border: 1px solid rgba(242, 193, 78, 0.5);
+  border-radius: 999px;
+  color: var(--gold);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.masthead__title {
+  margin: 0;
+  font: 700 clamp(48px, 10vw, 104px)/1 var(--font-display);
+  color: var(--snow);
+  text-shadow: 0 3px 0 var(--cranberry-dark), 0 10px 30px rgba(200, 16, 46, 0.45);
+}
+.masthead__title a { color: inherit; text-decoration: none; }
+.masthead__subtitle {
+  max-width: 620px;
+  margin: 14px auto 0;
+  color: var(--frost);
+  font-size: clamp(16px, 2.2vw, 20px);
+}
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.08);
+  border: 1px solid rgba(255, 250, 240, 0.18);
+  color: var(--snow);
   font-weight: 800;
 }
-h1::before{ content:"🎄"; margin-right:.4ch; }
-h2{
-  font-size: clamp(20px,2.4vw,28px);
-  border-left:6px solid var(--red);
-  padding-left:.6rem;
-}
-h3{ font-weight:600; color:#e7f0ec; overflow-wrap:anywhere; }
-
-/* Controls above results */
-label{
-  display:block;
-  margin: .5rem 0 .25rem;
-  color:#e7f0ec;
-  font-weight:700;
-}
-#filter-results{
-  width:min(480px, 100%);
-  padding:.65rem .8rem;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.35);
-  background: rgba(255,255,255,.18);
-  color:#fff;
-  outline:none;
-}
-#filter-results::placeholder{ color: rgba(255,255,255,.7); }
-
-/* Primary button */
-#generate-results{
-  appearance:none; cursor:pointer; border:0;
-  padding:.75rem 1.1rem; margin:.5rem 0 1rem;
-  border-radius:999px; font-weight:800; letter-spacing:.3px;
-  color:#fff; background: linear-gradient(180deg, var(--red), #9e1f1f);
-  box-shadow: 0 4px 0 #6d1414, 0 8px 18px rgba(0,0,0,.25);
+.countdown:empty { display: none; }
+.countdown__number {
+  font: 700 30px/1 var(--font-display);
+  color: var(--gold);
 }
 
-/* ===== Results tables (legible) ===== */
-#results .margin-top-md{
-  margin-top: 2rem;
-  background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.18);
-  border-radius:16px;
-  padding:1rem;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border:1px solid #e3ece7;
-  border-radius:12px;
-  overflow:hidden;
-}
-thead th{
-  text-align:left;
-  padding:.75rem .8rem;
-  background:#f3f7f5;
-  color:#0d1b16;
-  font-weight:700;
-  border-bottom:1px solid #dde7e2;
-}
-thead th:first-child{ border-left:4px solid var(--green); }
-thead th:nth-child(3)::after{ content:" 🧬"; }
-thead th:nth-child(4)::after{ content:" 🎁"; }
-tbody td{
-  padding:.7rem .8rem;
-  border-top:1px solid #eef3f1;
-  color:#152821;
-}
-tbody tr:nth-child(odd){ background:#fafdfc; }
-
-/* ===== Family Tree (responsive, no clipping) ===== */
-
-/* Grid the top-level nodes; stack children inside parents */
-#tree{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap:16px;
-  align-items:start;
-}
-
-/* Card for each node */
-#tree .node{
-  display:block;
-  background: var(--card);
-  border:1px solid var(--cardLine);
-  border-radius:14px;
-  padding:0;           /* handled by .input-wrapper */
-  max-width:100%;
-}
-
-/* Remove old fixed sizes that clipped content */
-#tree .input-wrapper{
-  border:0;
-  height:auto;         /* critical fix */
-  min-width:auto;
-  max-width:none;
-  padding:14px;
-}
-
-/* Inputs inside a node */
-#tree .input-group{ margin:.5rem 0; }
-#tree label{ color:var(--ink); margin:0 0 .25rem; font-weight:700; }
-#tree input[type="text"], 
-#tree select{
-  width:100%;
-  background:#fff;
-  color:var(--ink);
-  border:1px solid #cfe0d8;
-  border-radius:12px;
-  padding:.6rem .75rem;
-  min-height:40px;
-}
-
-/* Row for the Add/Remove buttons */
-#tree .margin-top-xs{ margin-top:.75rem; }
-#tree button{
-  font:inherit;
-  background: var(--red);
-  color:#fff;
-  border:0;
-  border-radius:999px;
-  padding:.5rem .9rem;
-  box-shadow:0 3px 0 #6d1414, 0 6px 14px rgba(0,0,0,.18);
-  margin-right:.5rem;
-}
-
-/* Nested children: stack vertically with a light guide line */
-#tree .node .node{
-  margin:12px 0 0 16px;
-  border-left:2px dashed var(--mutedLine);
-  padding-left:12px;
-  background: transparent;
-  border-radius:0;
-}
-
-/* Accessibility */
-:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
-
-/* No animations anywhere */
-*, *::before, *::after { transition:none !important; animation:none !important; }
-
-/* Small screens */
-@media (max-width:640px){
-  .container{ padding:16px; }
-  h1{ font-size: clamp(24px, 8vw, 36px); }
-}
-
-/* ===== Parent → Child hierarchy visuals ===== */
-
-/* Make every node a positioning context */
-#tree .node{ position: relative; }
-
-/* 1) Parents (depth=1): keep card, add a "Children" divider when there are children */
-#tree .node[data-depth="1"]:has(> .node) .input-wrapper{
-  padding-bottom: 12px;
-  margin-bottom: 8px;
-  border-bottom: 1px dashed #e6efeb;
-}
-#tree .node[data-depth="1"]:has(> .node) .input-wrapper::after{
-  content: "Children";
-  display: block;
-  font-size: .82rem;
-  letter-spacing: .2px;
-  color: #5e716b;
-  margin-top: 6px;
-}
-
-/* 2) First-level children (depth=2): inset cards with a connector elbow */
-#tree .node[data-depth="1"] > .node[data-depth="2"]{
-  background: #fafdfc;
-  border: 1px solid #e7efeb;
-  border-left: 4px solid var(--green);
-  border-radius: 12px;
-  margin: 12px 12px 0 18px;
-  padding: 0; /* handled by .input-wrapper */
-}
-#tree .node[data-depth="1"] > .node[data-depth="2"] .input-wrapper{
-  padding: 12px;
-  border: 0;
-  background: transparent;
-}
-#tree .node[data-depth="1"] > .node[data-depth="2"]::before{
-  /* elbow connector to the parent */
-  content:"";
-  position:absolute;
-  left:-18px;             /* starts in parent gutter */
-  top:26px;               /* aligns roughly with first label */
-  width:14px; height:2px;
-  background:#cbdad4;
-}
-#tree .node[data-depth="1"] > .node[data-depth="2"]::after{
-  /* short vertical upstroke (looks like an elbow) */
-  content:"";
-  position:absolute;
-  left:-18px; top:12px; width:2px; height:16px;
-  background:#cbdad4;
-}
-
-/* 3) Deeper descendants (depth>=3): lighter inset + gold accent so nesting reads clearly */
-#tree .node .node[data-depth="3"],
-#tree .node .node .node[data-depth="4"]{
-  background:#ffffff;
-  border:1px solid #eef3f1;
-  border-left:4px solid var(--gold);
-  border-radius:10px;
-  margin:10px 10px 0 16px;
-}
-#tree .node .node[data-depth="3"] .input-wrapper,
-#tree .node .node .node[data-depth="4"] .input-wrapper{
-  padding:10px;
-}
-
-/* 4) Vertical guide for stacked descendants inside a child block */
-#tree .node .node > .node{
+/* ---------- Present-style cards ---------- */
+.card {
   position: relative;
+  margin: 0 0 clamp(24px, 4vw, 40px);
+  padding: clamp(22px, 4vw, 40px);
+  background: var(--snow);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
-#tree .node .node > .node::before{
-  content:"";
-  position:absolute;
-  left:-16px;
-  top:0; bottom:auto;
-  width:12px; height:2px;
-  background:#d5e3de;      /* elbow to its immediate parent */
+/* Ribbon wrapped around the present, with a bow on the top edge. */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: clamp(28px, 8vw, 90px);
+  width: 16px;
+  background: linear-gradient(90deg, var(--cranberry-dark), var(--cranberry) 45%, var(--cranberry-dark));
+  opacity: 0.9;
 }
-#tree .node .node > .node::after{
-  content:"";
-  position:absolute;
-  left:-16px; top:-12px; bottom:-6px; /* soft vertical guide */
-  width:2px;
-  background:linear-gradient(#d5e3de,#d5e3de) no-repeat left top/2px calc(100% + 18px);
-  opacity:.75;
+.card::after {
+  content: '🎀';
+  position: absolute;
+  top: -26px;
+  right: calc(clamp(28px, 8vw, 90px) - 18px);
+  font-size: 40px;
+  line-height: 1;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.35));
 }
-
-/* 5) Tweak headings inside children so labels stand out but don't overpower */
-#tree .node .input-group label{
-  color:#1b2b25;
-  font-weight:700;
-}
-
-/* 6) Slightly tighter spacing for child buttons */
-#tree .node .margin-top-xs{ margin-top:.6rem; }
-#tree .node button{ margin-right:.5rem; }
-
-/* 7) Compact on small screens so hierarchy still reads */
-@media (max-width: 640px){
-  #tree{
-    grid-template-columns: 1fr;
-  }
-  #tree .node[data-depth="1"] > .node[data-depth="2"]{ margin-left:14px; }
-}
-
-/* === Family tree layout fixes (paste at bottom) === */
-
-/* Top-level families sit in a responsive grid */
-#tree{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px 16px;         /* row / column gap */
-  align-items: start;
-}
-
-/* Make each top-level family a card column */
-#tree > .node{
-  background: #fff;
-  border: 1px solid #dfe9e5;
-  border-radius: 14px;
-  padding: 0;             /* inner padding handled below */
-}
-
-/* Keep the form area padded */
-#tree > .node > .input-wrapper{
-  padding: 14px;
-  border: 0;
-}
-
-/* Children stack vertically inside their parent, inset with a guide */
-#tree .node > .node{
-  margin: 12px 12px 0 18px;      /* indent from parent */
-  padding: 0;
-  border-left: 2px dashed #e9f2ee;
-}
-
-/* Style first-level children a touch like subcards */
-#tree > .node > .node{
-  background: #fafdfc;
-  border: 1px solid #e7efeb;
-  border-left: 4px solid #0f5132;
-  border-radius: 12px;
-}
-#tree > .node > .node > .input-wrapper{
-  padding: 12px;
-}
-
-/* Deeper descendants – lighter accent so nesting reads clearly */
-#tree .node .node .node{
-  background: #fff;
-  border: 1px solid #eef3f1;
-  border-left: 4px solid #d4a017;
-  border-radius: 10px;
-  margin: 10px 10px 0 16px;
-}
-#tree .node .node .node > .input-wrapper{
-  padding: 10px;
-}
-
-/* Small screens: stack families */
-@media (max-width: 640px){
-  #tree{ grid-template-columns: 1fr; }
-}
-
-/* --- Tables: readable on mobile --- */
-
-/* Fluid table font with sensible floor/ceiling */
-:root {
-  --table-font: clamp(18px, 4.5vw, 22px);
-}
-
-/* Make tables scroll instead of shrinking text */
-.margin-top-md { overflow-x: auto; }
-
-/* Base improvements */
-.margin-top-md table {
-  width: 100%;
-  border-spacing: 0;
-}
-
-/* Mobile: bigger text, comfy padding, sticky header, min width for scroll */
+.card > * { position: relative; }
+/* On phones the ribbon would cut through form fields, so keep only the bow. */
 @media (max-width: 640px) {
-  .margin-top-md table { font-size: var(--table-font); min-width: 560px; }
-  .margin-top-md th,
-  .margin-top-md td { padding: 10px 8px; line-height: 1.35; font-size: var(--table-font); }
-  .margin-top-md thead th {
-    position: sticky; top: 0; background: #1f2a24; /* match your theme */
-    z-index: 1;
-  }
-  /* Keep long names usable */
-  .margin-top-md td { word-break: break-word; }
-  .margin-top-md th:nth-child(3),
-  .margin-top-md th:nth-child(4),
-  .margin-top-md td:nth-child(3),
-  .margin-top-md td:nth-child(4) { text-align: center; white-space: nowrap; }
+  .card::before { display: none; }
+  .card__title, .card__lead, .results-group__header { padding-right: 0; }
+}
+.card__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 6px;
+  padding-right: clamp(40px, 10vw, 110px);
+  font: 700 clamp(34px, 5vw, 50px)/1.1 var(--font-display);
+  color: var(--pine);
+}
+.card__lead { margin: 0 0 22px; padding-right: clamp(40px, 10vw, 110px); color: var(--ink-soft); }
+
+a { color: var(--cranberry); font-weight: 800; }
+
+/* ---------- Forms & buttons ---------- */
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+input[type='text'], input[type='search'], input[type='password'], select {
+  width: 100%;
+  padding: 12px 14px;
+  font: 600 16px var(--font-body);
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus-visible, select:focus-visible, .button:focus-visible {
+  outline: none;
+  border-color: var(--holly);
+  box-shadow: 0 0 0 4px rgba(46, 139, 87, 0.25);
 }
 
-/* Very small phones */
-@media (max-width: 380px) {
-  .margin-top-md table { min-width: 520px; }
-  .margin-top-md th, .margin-top-md td { padding: 10px 6px; }
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  font: 900 16px var(--font-body);
+  color: var(--snow);
+  background: linear-gradient(180deg, var(--cranberry), var(--cranberry-dark));
+  border: 2px solid var(--gold);
+  border-radius: 999px;
+  box-shadow: 0 6px 0 #5c0715, 0 10px 20px rgba(142, 11, 32, 0.35);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.button:hover { transform: translateY(-1px); }
+.button:active { transform: translateY(4px); box-shadow: 0 2px 0 #5c0715; }
+.button:disabled { opacity: 0.6; cursor: progress; transform: none; }
+.button--gold {
+  color: var(--ink);
+  background: linear-gradient(180deg, #ffd978, var(--gold-deep));
+  border-color: #fff3cf;
+  box-shadow: 0 6px 0 #8a6416, 0 10px 20px rgba(201, 149, 43, 0.35);
+}
+.button--gold:active { box-shadow: 0 2px 0 #8a6416; }
+.button--quiet {
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--pine);
+  background: var(--frost);
+  border: 2px solid var(--line);
+  box-shadow: none;
+}
+.button--quiet:active { box-shadow: none; transform: translateY(1px); }
+.button--danger { color: var(--cranberry-dark); }
+
+.signup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+}
+.signup__field { flex: 1 1 260px; }
+
+/* ---------- Home page rules ---------- */
+.rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rules li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  background: #fff;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+.rules__icon { font-size: 26px; line-height: 1; }
+
+/* ---------- Share box ---------- */
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  align-items: center;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: #fff7e0;
+  border: 2px solid #f4dc9c;
+  border-radius: var(--radius-md);
+}
+.share__label { margin: 0; flex-basis: 100%; }
+.share__url {
+  flex: 1 1 280px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font: 700 14px/1.4 ui-monospace, 'SF Mono', Menlo, monospace;
+  color: var(--pine);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+.toolbar__search { flex: 1 1 260px; }
+
+/* ---------- Alerts & admin forms ---------- */
+.alert, .notice {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+}
+.alert { background: #fde4e7; border: 2px solid #f4b3bd; color: var(--cranberry-dark); }
+.alert[hidden] { display: none; }
+.alert--toast {
+  position: fixed;
+  z-index: 10;
+  left: 50%;
+  bottom: 20px;
+  width: min(560px, calc(100vw - 32px));
+  margin: 0;
+  transform: translateX(-50%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.notice { background: #e2f4e9; border: 2px solid #b5dfc6; color: #1d5e3a; }
+
+.card--narrow { max-width: 560px; margin-left: auto; margin-right: auto; }
+.stacked-form { display: grid; gap: 16px; justify-items: start; }
+.stacked-form > div { width: 100%; }
+.logout { margin-top: 18px; }
+.admin-link { text-align: center; margin: 0 0 24px; }
+.admin-link a { color: var(--gold); }
+
+/* ---------- Results: gift tags ---------- */
+.results-group { margin-top: 30px; }
+.results-group__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  padding-right: clamp(40px, 10vw, 110px);
+  border-bottom: 3px dotted var(--line);
+}
+.results-group__title {
+  margin: 0;
+  font: 700 clamp(28px, 4vw, 36px)/1.1 var(--font-display);
+  color: var(--cranberry);
+}
+.results-group__stats { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+.tags {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+.tag {
+  position: relative;
+  padding: 18px 18px 14px 30px;
+  background: linear-gradient(135deg, #fff 0%, #fffaf0 100%);
+  border: 2px solid var(--line);
+  border-radius: 6px 18px 18px 6px;
+  box-shadow: 0 6px 14px rgba(15, 51, 38, 0.1);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+/* The punched hole of a gift tag. */
+.tag::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pine);
+  box-shadow: 0 0 0 3px var(--gold);
+}
+.tag:hover { transform: rotate(-1deg) translateY(-2px); box-shadow: 0 12px 22px rgba(15, 51, 38, 0.16); }
+.tag__giver, .tag__receiver {
+  display: block;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.tag__arrow {
+  display: block;
+  margin: 4px 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--holly);
+}
+.tag__receiver { color: var(--cranberry); }
+.tag__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.tag__distance {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  font: 800 13px var(--font-body);
+  color: var(--pine);
+  background: var(--frost);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.tag__distance:hover, .tag__distance:focus-visible {
+  outline: none;
+  border-color: var(--holly);
+  background: #ddf3e6;
+}
+.tag--year-off { background: var(--frost); }
+.tag--year-off .tag__receiver { color: var(--holly); }
+.tag[hidden] { display: none; }
+
+.empty-state {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.empty-state__icon { display: block; font-size: 44px; margin-bottom: 8px; }
+
+.save-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+}
+.save-bar__status { margin: 0; font-weight: 800; color: var(--holly); }
+.save-bar__status--error { color: var(--cranberry); }
+
+.loading {
+  padding: 24px;
+  text-align: center;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+.loading::before {
+  content: '❄';
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--holly);
+  animation: spin 1.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- How are we connected? dialog ---------- */
+.connection {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--snow);
+  color: var(--ink);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+}
+.connection::backdrop { background: rgba(7, 26, 19, 0.7); backdrop-filter: blur(2px); }
+.connection__body { position: relative; padding: clamp(20px, 4vw, 32px); }
+.connection__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--frost);
+  color: var(--pine);
+  font-size: 16px;
+  cursor: pointer;
+}
+.connection__close:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.4); }
+.connection__title {
+  margin: 0 40px 4px 0;
+  font: 700 clamp(28px, 4vw, 36px)/1.1 var(--font-display);
+  color: var(--pine);
+}
+.connection__eyebrow {
+  margin: 0 0 6px;
+  color: var(--cranberry);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.connection__summary { margin: 0 0 4px; font-weight: 700; }
+.connection__quip { margin: 0 0 16px; color: var(--holly); font-weight: 800; font-style: italic; }
+.connection__diagram {
+  overflow-x: auto;
+  padding: 8px 0;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+.connection__svg { display: block; height: auto; margin: 0 auto; }
+.connection__legend { margin: 12px 0 0; font-size: 14px; color: var(--ink-soft); }
+.connection-link { stroke: var(--gold-deep); stroke-width: 3; }
+.connection-link--partner { stroke: var(--cranberry); stroke-dasharray: 6 5; }
+.connection-link__heart { font-size: 16px; text-anchor: middle; dominant-baseline: central; }
+.connection-node rect { fill: #fff; stroke: var(--line); stroke-width: 2; }
+.connection-node text {
+  font: 800 13px var(--font-body);
+  fill: var(--ink);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.connection-node--giver rect { fill: #fff7e0; stroke: var(--gold-deep); }
+.connection-node--receiver rect { fill: #fde4e7; stroke: var(--cranberry); }
+.connection-node--receiver text { fill: var(--cranberry-dark); }
+.connection-node--ancestor rect { fill: var(--pine); stroke: var(--pine); }
+.connection-node--ancestor text { fill: var(--snow); }
+
+/* ---------- Family tree ---------- */
+.person__children {
+  margin-left: clamp(14px, 3vw, 34px);
+  padding-left: var(--tree-indent);
+  border-left: 3px dashed rgba(201, 149, 43, 0.6);
+}
+.person__children:empty { display: none; }
+.person__card {
+  position: relative;
+  margin: 12px 0;
+  padding: 14px 16px;
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 10px rgba(15, 51, 38, 0.06);
+}
+/* A bauble hanging off the garland for each nested person. */
+.person__children > .person > .person__card::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: calc(-1 * var(--tree-indent) - 11px);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 0 2px, var(--bauble, var(--cranberry)) 3px);
+  box-shadow: 0 0 0 3px var(--snow);
+}
+.person__children > .person:nth-child(3n + 2) > .person__card { --bauble: var(--gold-deep); }
+.person__children > .person:nth-child(3n + 3) > .person__card { --bauble: var(--holly); }
+.person--sitting-out > .person__card { background: var(--frost); }
+.person--sitting-out > .person__card .person__name { color: var(--ink-soft); }
+
+.person__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.person__name { font-weight: 900; font-size: 18px; }
+.person__heart { font-size: 15px; line-height: 1; }
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge--kid { background: #dcedfb; color: #1f5d8f; }
+.badge--young-adult { background: #ddf3e6; color: #1d5e3a; }
+.badge--old-guard { background: #fff0c7; color: #7a5810; }
+.badge--sitting-out { background: #e7e7e7; color: #555; }
+
+.person__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  margin: 0;
+  align-self: end;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+  color: var(--ink);
+}
+.checkbox input { width: 22px; height: 22px; accent-color: var(--holly); }
+.person__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.footer {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--gutter) 40px;
+  text-align: center;
+  color: rgba(238, 246, 242, 0.6);
+  font-size: 14px;
 }

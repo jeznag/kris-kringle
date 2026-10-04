@@ -88,84 +88,6 @@ function dfs(node, visitingFunction) {
   visitingFunction(node);
 }
 
-function treeDepth(tree) {
-  let count = 0;
-  dfs(tree, node => {
-    if (node.name) {
-      count += node.partner ? 2 : 1;
-    }
-  });
-  return count;
-}
-
-function getDistanceFromRoot(tree, name) {
-  let count = 0;
-  let found = false;
-  bfs(tree, node => {
-    if (!found) {
-      if (node.name !== name && node.partner !== name) {
-        count += 1;
-      }
-
-      if (node.name === name) {
-        count += 1;
-        found = true;
-      }
-
-      if (node.partner === name) {
-        count += 5;
-        found = true;
-      }
-    }
-  });
-  return count;
-}
-
-function nodeContainsName(nodeToCheck, nameToFind) {
-  let containsName = false;
-  dfs(nodeToCheck, nodeBeingVisited => {
-    if (nodeBeingVisited.name === nameToFind || nodeBeingVisited.partner === nameToFind) {
-      containsName = true;
-    }
-  });
-
-  return containsName;
-}
-
-function getLowestCommonAncestor(tree, name1, name2) {
-  let deepestNode = { depth: -1, node: tree };
-  dfs(tree, nodeBeingVisited => {
-    if (nodeContainsName(nodeBeingVisited, name1) && nodeContainsName(nodeBeingVisited, name2)) {
-      const depth = getDepthOfPerson(tree, nodeBeingVisited.name, 0);
-
-      if (deepestNode.depth < depth) {
-        deepestNode = { node: nodeBeingVisited, depth };
-      }
-    }
-  });
-
-  return deepestNode.node;
-}
-
-function getDepthOfPerson(tree, name, currentDepth) {
-  if (tree.children) {
-    if (hasChildWithName(tree, name)) {
-      return currentDepth;
-    }
-
-    let result = -1;
-    tree.children.some(node => {
-      const newDepth = getDepthOfPerson(node, name, currentDepth + 1);
-      if (newDepth > -1) {
-        result = newDepth;
-        return true;
-      }
-    });
-    return result;
-  }
-  return -1;
-}
-
 function findNode(tree, name) {
   let result;
   bfs(tree, node => {
@@ -189,87 +111,160 @@ function findNodeByID(tree, ID) {
   return result;
 }
 
-// todo handle grandchildren
-function isParentOf(tree, potentialParent, potentialDescendent) {
-  const potentialParentNode = findNode(tree, potentialParent);
-  return hasChildWithName(potentialParentNode, potentialDescendent);
-}
+/* ---------- Family graph & social distance ---------- */
 
-function hasChildWithName(node, name) {
-  if (!node || !node.children) {
-    return false;
+// Stands in for the unrecorded ancestors shared by everyone at the top of the tree,
+// which makes top-level people siblings of each other.
+const FAMILY_ROOT = "__family_root__";
+
+// Each edge reads "<relative> is my <relation>".
+const RELATIONS = { PARENT: "parent", CHILD: "child", PARTNER: "partner" };
+const INVERSE_RELATIONS = {
+  [RELATIONS.PARENT]: RELATIONS.CHILD,
+  [RELATIONS.CHILD]: RELATIONS.PARENT,
+  [RELATIONS.PARTNER]: RELATIONS.PARTNER
+};
+
+function addRelation(graph, person, relative, relation) {
+  if (!graph.has(person)) {
+    graph.set(person, []);
   }
-  return node.children.some(
-    child => child.name === name
-  );
+  graph.get(person).push({ person: relative, relation });
 }
 
-function arePartners(tree, person1, person2) {
-  const person1Node = findNode(tree, person1);
-  return (
-    (person1Node.name === person1 && person1Node.partner === person2) ||
-    (person1Node.partner === person1 && person1Node.name === person2)
-  );
+function connect(graph, person, relative, relation) {
+  addRelation(graph, person, relative, relation);
+  addRelation(graph, relative, person, INVERSE_RELATIONS[relation]);
 }
 
-function areSiblings(tree, person1, person2) {
-  const node1 = findNode(tree, person1);
+/**
+ * People are vertices. Partners are one step apart, and a child is one step from both
+ * partners of their parent node, so in-laws are reached through the person they married.
+ */
+function buildFamilyGraph(tree) {
+  const graph = new Map([[FAMILY_ROOT, []]]);
+  const visit = (node, parents) => {
+    if (node.name) {
+      parents.forEach(parent => connect(graph, node.name, parent, RELATIONS.PARENT));
+      if (node.partner) {
+        connect(graph, node.name, node.partner, RELATIONS.PARTNER);
+      }
+    }
+    const peopleInNode = [node.name, node.partner].filter(Boolean);
+    (node.children || []).forEach(child => visit(child, peopleInNode));
+  };
+  tree.children.forEach(child => visit(child, [FAMILY_ROOT]));
+  return graph;
+}
 
-  if (node1.partner === person1) {
-    return false;
+/** Breadth-first shortest path: [{ person, relation }], where relation links it to the previous step. */
+function findConnectionPath(graph, from, to) {
+  if (!graph.has(from) || !graph.has(to)) {
+    return null;
   }
-
-  const parent = findNodeByID(tree, node1.parent);
-
-  return parent.children.find((child) => child.name === person2);
+  const cameFrom = new Map([[from, null]]);
+  const queue = [from];
+  while (queue.length && !cameFrom.has(to)) {
+    const person = queue.shift();
+    graph.get(person).forEach(({ person: relative, relation }) => {
+      if (!cameFrom.has(relative)) {
+        cameFrom.set(relative, { person, relation });
+        queue.push(relative);
+      }
+    });
+  }
+  if (!cameFrom.has(to)) {
+    return null;
+  }
+  const path = [];
+  for (let person = to; person !== from; person = cameFrom.get(person).person) {
+    path.unshift({ person, relation: cameFrom.get(person).relation });
+  }
+  path.unshift({ person: from, relation: null });
+  return path;
 }
 
-function areParentChild(tree, person1, person2) {
-  return isParentOf(tree, person1, person2) || isParentOf(tree, person2, person1);
+const COUSIN_ORDINALS = ["first", "second", "third", "fourth", "fifth"];
+const COUSIN_REMOVALS = ["once", "twice", "three times", "four times"];
+
+function greatPrefix(count) {
+  return "great-".repeat(Math.max(0, count));
 }
 
-function _calculateSocialDistance(tree, person1, person2) {
-  if (!person1 || !person2) {
+function describeBloodRelationship(ups, downs) {
+  if (ups === 0 && downs === 0) return null;
+  if (downs === 0) return ups === 1 ? "parent" : `${greatPrefix(ups - 2)}grandparent`;
+  if (ups === 0) return downs === 1 ? "child" : `${greatPrefix(downs - 2)}grandchild`;
+  if (ups === 1 && downs === 1) return "sibling";
+  if (downs === 1) return `${greatPrefix(ups - 2)}aunt or uncle`;
+  if (ups === 1) return `${greatPrefix(downs - 2)}niece or nephew`;
+
+  const degree = Math.min(ups, downs) - 1;
+  const removed = Math.abs(ups - downs);
+  const cousin = `${COUSIN_ORDINALS[degree - 1] || `${degree}th`} cousin`;
+  return removed ? `${cousin} ${COUSIN_REMOVALS[removed - 1] || `${removed} times`} removed` : cousin;
+}
+
+/** Names what the last person in the path is to the first, e.g. "first cousin's partner". */
+function describeRelationship(path) {
+  const relations = path.slice(1).map(step => step.relation);
+  const startsWithPartner = relations[0] === RELATIONS.PARTNER;
+  const endsWithPartner = relations.length > 1 && relations[relations.length - 1] === RELATIONS.PARTNER;
+  const bloodRelations = relations.slice(startsWithPartner ? 1 : 0, endsWithPartner ? -1 : undefined);
+  const ups = bloodRelations.filter(relation => relation === RELATIONS.PARENT).length;
+  const downs = bloodRelations.filter(relation => relation === RELATIONS.CHILD).length;
+
+  // Blood relatives are reached by climbing to a common ancestor then descending; any other
+  // shape (e.g. a partner mid-way) has no everyday name.
+  const isClimbThenDescend = bloodRelations.every((relation, index) =>
+    relation === (index < ups ? RELATIONS.PARENT : RELATIONS.CHILD)
+  );
+  if (!isClimbThenDescend) {
+    return null;
+  }
+  const parts = [
+    startsWithPartner && RELATIONS.PARTNER,
+    describeBloodRelationship(ups, downs),
+    endsWithPartner && RELATIONS.PARTNER
+  ].filter(Boolean);
+  return parts.length ? parts.join("'s ") : null;
+}
+
+/** How two people are related, for showing to humans. Always reflects the tree as it is now. */
+function getConnection(tree, from, to) {
+  const steps = findConnectionPath(buildFamilyGraph(tree), from, to);
+  if (!steps) {
+    return null;
+  }
+  return { steps, distance: steps.length - 1, relationship: describeRelationship(steps) };
+}
+
+// Caches are per tree object; run() clears its tree's entry so edits made in the page are seen.
+const familyGraphCache = new WeakMap();
+
+function getFamilyGraphCache(tree) {
+  if (!familyGraphCache.has(tree)) {
+    familyGraphCache.set(tree, { graph: buildFamilyGraph(tree), distances: new Map() });
+  }
+  return familyGraphCache.get(tree);
+}
+
+/** Number of family steps between two people (see buildFamilyGraph); Infinity if unconnected. */
+function getSocialDistance(tree, person1, person2) {
+  if (person1 === NO_RECIPIENT || person2 === NO_RECIPIENT) {
     return 0;
   }
-
-  if (arePartners(tree, person1, person2)) {
-    return 0;
+  const { graph, distances } = getFamilyGraphCache(tree);
+  const key = [person1, person2].sort().join("|");
+  if (!distances.has(key)) {
+    const path = findConnectionPath(graph, person1, person2);
+    distances.set(key, path ? path.length - 1 : Infinity);
   }
-
-  if (areSiblings(tree, person1, person2)) {
-    return 2;
-  }
-
-  if (areParentChild(tree, person1, person2)) {
-    return 2;
-  }
-
-  const distanceFromRoot1 = getDistanceFromRoot(tree, person1);
-  const distanceFromRoot2 = getDistanceFromRoot(tree, person2);
-  const lowestCommonAncestor = getLowestCommonAncestor(tree, person1, person2);
-  if (!lowestCommonAncestor) {
-    return 99;
-  }
-  const ancestorDistanceFromRoot = getDistanceFromRoot(tree, lowestCommonAncestor.name);
-
-  return distanceFromRoot1 + distanceFromRoot2 - 2 * ancestorDistanceFromRoot;
-}
-
-function areBloodRelatives(tree, person1, person2) {
-  const person1Node = findNode(tree, person1);
-  const person2Node = findNode(tree, person2);
-  // the blood relative gets to be the "name" whereas relatives in law
-  // will be in the "partner" property
-  return person1Node.name === person1 && person2Node.name === person2;
+  return distances.get(key);
 }
 
 function getExchangeForGiver(exchanges, giverName) {
   return exchanges.find(exchange => areNamesSimilar(exchange.giver, giverName));
-}
-
-function getExchangeForReceiver(exchanges, receiverName) {
-  return exchanges.find(exchange => areNamesSimilar(exchange.receiver, receiverName));
 }
 
 function getAllParticipatingPeopleInTree(tree, type) {
@@ -295,7 +290,11 @@ const honorifics = ["Sage", "Esteemed", "Wise One", "Dr", "Padawan", "Fleetfoot"
   "Emissary", "Greenhand", "Life Bringer", "Herald", "Custodian", "Gearsmith",
   "Vizier", "Knight", "Physician", "Charioteer", "Iron Warrior", "Field Defender",
   "Swift Healer of the Realm", "Seer", "Counsel", "Scholar", "Visionary", "Paladin",
-  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate'];
+  "Cartographer", "Shieldbearer", "Princess", "Merchant", "Scientist", "Princess", 'Padawan', 'Groundling', 'Peasantling', "Alchemist", 'Fleetfoot', 'Neonate', 'Junior Striker'];
+
+// Multi-word honorifics must be stripped before the single words inside them
+// (e.g. "Swift Healer of the Realm" before "Healer"), or the leftovers break name matching.
+const honorificsLongestFirst = [...honorifics].sort((a, b) => b.length - a.length);
 
 const cleanedNameCache = {};
 
@@ -305,7 +304,7 @@ function cleanName(name) {
   }
   
   let cleanedName = name;
-  honorifics.forEach(honorific => {
+  honorificsLongestFirst.forEach(honorific => {
     const regex = new RegExp(`\\b${honorific}\\b`, 'gi');
     cleanedName = cleanedName.replace(regex, '').trim();
   });
@@ -464,159 +463,162 @@ function arrayDiff(array1, array2) {
 }
 
 const MAX_ITERATIONS = 100;
+const MAX_DURATION_MS = 90000;
+// A match must be strictly further apart (in family steps) than this. generateMatches relaxes
+// it a step at a time when no draw fits: e.g. 3 for young adults means cousins (4) first.
+const STARTING_MIN_DISTANCE = { "kid": 3, "young adult": 3, "old guard": 2 };
+// Distance 1 is a partner, parent or child: never acceptable, however stuck the draw is.
+const LOWEST_MIN_DISTANCE = 1;
+// Attempts are cheap (well under a millisecond); too few and tight families (e.g. old guard,
+// where only in-laws are further than siblings) get relaxed to siblings unnecessarily.
+const ATTEMPTS_PER_MIN_DISTANCE = 300;
+// Old guard are too closely related to also require variety from last year, and kids are few.
+const RECEIVER_TYPES_NEEDING_VARIETY = ["young adult"];
+// How much closer than the giver threshold this year's receiver may be to last year's.
+const LAST_RECIPIENT_DISTANCE_SLACK = 2;
+// Big enough that any draw that avoids someone sitting out two years running beats any that doesn't.
+const REPEATED_YEAR_OFF_PENALTY = 1000;
+
+function hadYearOffLastYear(giver, exchangeDataFromPreviousYear) {
+  return getExchangeDataForGiver(giver, exchangeDataFromPreviousYear)?.receiver === NO_RECIPIENT;
+}
+
+function scoreDraw(exchanges, exchangeDataFromPreviousYear) {
+  // An unconnected person (Infinity) shouldn't make a draw look infinitely good.
+  const totalDistance = exchanges.reduce(
+    (total, exchange) => total + (Number.isFinite(exchange.socialDistance) ? exchange.socialDistance : 0),
+    0
+  );
+  const repeatedYearOffs = exchanges.filter(exchange =>
+    exchange.receiver === NO_RECIPIENT && hadYearOffLastYear(exchange.giver, exchangeDataFromPreviousYear)
+  ).length;
+  return totalDistance - REPEATED_YEAR_OFF_PENALTY * repeatedYearOffs;
+}
+
+function isCompleteDraw(exchanges, givers, recipients) {
+  const giversInDraw = exchanges.map(exchange => exchange.giver);
+  const recipientsInDraw = exchanges.map(exchange => exchange.receiver);
+  return !arrayDiff(givers, giversInDraw).length && !arrayDiff(recipients, recipientsInDraw).length;
+}
+
 /**
- * Generates matches. Performs a double check to make sure there is no repeat giving.
+ * Draws matches many times and keeps the best: the most family distance overall, while
+ * avoiding anyone having a year off two years running. Every kept draw is double-checked
+ * for repeat and recursive giving.
  */
-function run(
-  familyTree,
-  typeGiver,
-  typeReceiver,
-  exchangeDataFromPreviousYear
-) {
-  let result;
-  let isValidResult = false;
-  let iterations = 0;
-  const startTime = new Date();
-  let bestResult = { totalDistance: 0 };
-
-  const recipients = getAllParticipatingPeopleInTree(
-    familyTree,
-    typeReceiver
-  );
-
+function run(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear) {
+  familyGraphCache.delete(familyTree);
+  const startTime = Date.now();
+  const givers = getAllParticipatingPeopleInTree(familyTree, typeGiver);
+  const recipients = getAllParticipatingPeopleInTree(familyTree, typeReceiver);
   if (recipients.length === 0) {
-    return {
-      result: [],
-      iterations: 0,
-      executionTime: 0
-    };
+    return { result: [], iterations: 0, executionTime: 0 };
   }
 
-  const MAX_DURATION = 90000;
-
-  while (iterations < MAX_ITERATIONS && (new Date() - startTime) < MAX_DURATION) {
-    const MIN_DISTANCE = typeReceiver === 'old guard' ? 6 : 10;
-    result = generateMatches(
-      familyTree,
-      typeGiver,
-      typeReceiver,
-      exchangeDataFromPreviousYear,
-      0,
-      MIN_DISTANCE
-    );
-
+  let best = null;
+  let iterations = 0;
+  while (iterations < MAX_ITERATIONS && Date.now() - startTime < MAX_DURATION_MS) {
     iterations++;
-    const possibleRecipients = getAllParticipatingPeopleInTree(
-      familyTree,
-      typeReceiver
-    ).sort();
-    const possibleGivers = getAllParticipatingPeopleInTree(
-      familyTree,
-      typeGiver
-    ).sort();
-    const giversInResult = result.map(exchange => exchange.giver).sort();
-    const receiversInResult = result.map(exchange => exchange.receiver).sort();
-
-    const missingRecipients = arrayDiff(possibleRecipients, receiversInResult);
-    if (missingRecipients.length) {
+    const exchanges = generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear);
+    const isValidDraw = isCompleteDraw(exchanges, givers, recipients) &&
+      checkNoRepeatGiving(exchanges, exchangeDataFromPreviousYear) &&
+      checkNoRecursiveGiving(exchanges);
+    if (!isValidDraw) {
       continue;
     }
-
-    const missingGivers = arrayDiff(possibleGivers, giversInResult);
-    if (missingGivers.length) {
-      continue;
-    }
-
-    const hasRepeatGiving = !checkNoRepeatGiving(result, exchangeDataFromPreviousYear);
-    const hasRecursiveGiving = !checkNoRecursiveGiving(result);
-
-    isValidResult = !hasRepeatGiving && !hasRecursiveGiving;
-
-    if (isValidResult) {
-      const processedResult = result.map(exchange => {
-        return {
-          ...exchange,
-          socialDistance: getSocialDistance(
-            familyTree,
-            exchange.giver,
-            exchange.receiver
-          )
-        };
-      });
-
-      const totalDistance = processedResult.reduce(
-        (total, exchange) => total + exchange.socialDistance,
-        0
-      );
-
-      console.log('Distance this run: ', totalDistance, 'Best dinstance', bestResult.totalDistance);
-      if (totalDistance > bestResult.totalDistance) {
-        bestResult = {
-          totalDistance,
-          exchanges: result
-        };
-      }
-    } else {
-      console.log('invalid result :(', hasRecursiveGiving, hasRepeatGiving);
+    const score = scoreDraw(exchanges, exchangeDataFromPreviousYear);
+    if (!best || score > best.score) {
+      best = { score, exchanges };
     }
   }
 
-  const finishTime = new Date();
-  const executionTime = finishTime - startTime;
-
-  console.log('executionTime', executionTime);
-
-  if (!bestResult.totalDistance) {
-    console.log('No best result :(');
-    return {
-      result: [],
-      iterations,
-      executionTime
-    };
-  }
-  return {
-    result: bestResult.exchanges,
-    iterations,
-    executionTime
-  };
+  return { result: best ? best.exchanges : [], iterations, executionTime: Date.now() - startTime };
 }
 
-const distanceCache = {};
+// Keyed by the previous year's exchange list, so different histories never share answers.
+const lastYearExchangeCache = new WeakMap();
 
-function getSocialDistance(tree, person1, person2) {
-  const key = [person1, person2].sort().join('|');
-  if (distanceCache[key] === undefined) {
-    distanceCache[key] = _calculateSocialDistance(tree, person1, person2);
+function getExchangeDataForGiver(giverName, exchangeDataFromPreviousYear) {
+  if (!lastYearExchangeCache.has(exchangeDataFromPreviousYear)) {
+    lastYearExchangeCache.set(exchangeDataFromPreviousYear, new Map());
   }
-  return distanceCache[key];
+  const exchangesByGiver = lastYearExchangeCache.get(exchangeDataFromPreviousYear);
+  if (!exchangesByGiver.has(giverName)) {
+    const exchangeFromLastYear = getExchangeForGiver(exchangeDataFromPreviousYear, giverName);
+    const lastYearExchangeCorrected = exchangeFromLastYear?.receiver?.includes('Sist') ? {
+      ...exchangeFromLastYear,
+      receiver: 'Princess Tilly'
+    } : exchangeFromLastYear;
+    exchangesByGiver.set(giverName, lastYearExchangeCorrected);
+  }
+  return exchangesByGiver.get(giverName);
 }
 
-const exchangeCache = {};
-
-function getExchangeDataForGiver(giverName, receiverType, exchangeDataFromPreviousYear) {
-  if (!exchangeCache[receiverType]) {
-    exchangeCache[receiverType] = {};
+function isAcceptableMatch(giver, candidate, draw) {
+  const { familyTree, typeReceiver, exchangeDataFromPreviousYear, exchanges, allRecipients, minDistance } = draw;
+  if (candidate === giver || getSocialDistance(familyTree, giver, candidate) <= minDistance) {
+    return false;
+  }
+  const isReciprocal = exchanges.some(exchange => exchange.giver === candidate && exchange.receiver === giver);
+  if (isReciprocal) {
+    return false;
   }
 
-  if (exchangeCache[receiverType][giverName]) {
-    return exchangeCache[receiverType][giverName];
+  const exchangeFromLastYear = getExchangeDataForGiver(giver, exchangeDataFromPreviousYear);
+  if (!exchangeFromLastYear) {
+    return true;
   }
-  const exchangeFromLastYear = getExchangeForGiver(
-    exchangeDataFromPreviousYear,
-    giverName
+  if (areNamesSimilar(exchangeFromLastYear.receiver, candidate)) {
+    return false;
+  }
+  if (!RECEIVER_TYPES_NEEDING_VARIETY.includes(typeReceiver)) {
+    return true;
+  }
+  // Steer away from last year's recipient's corner of the family too.
+  const lastRecipient = allRecipients.find(recipient => areNamesSimilar(recipient, exchangeFromLastYear.receiver));
+  return !lastRecipient ||
+    getSocialDistance(familyTree, lastRecipient, candidate) > minDistance - LAST_RECIPIENT_DISTANCE_SLACK;
+}
+
+// Givers who sat out last year choose first, so they get a recipient before they run out.
+function prioritiseLastYearsYearOffs(givers, exchangeDataFromPreviousYear) {
+  const hadYearOff = givers.filter(giver => hadYearOffLastYear(giver, exchangeDataFromPreviousYear));
+  return [...hadYearOff, ...givers.filter(giver => !hadYearOff.includes(giver))];
+}
+
+/** One random attempt at a full draw, or null if some giver ends up with nobody acceptable. */
+function attemptDraw(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, minDistance) {
+  const allRecipients = getAllParticipatingPeopleInTree(familyTree, typeReceiver);
+  let remainingRecipients = shuffleArray(allRecipients);
+  const exchanges = [];
+  const draw = { familyTree, typeReceiver, exchangeDataFromPreviousYear, exchanges, allRecipients, minDistance };
+
+  const givers = prioritiseLastYearsYearOffs(
+    shuffleArray(getAllParticipatingPeopleInTree(familyTree, typeGiver)),
+    exchangeDataFromPreviousYear
   );
-
-  const lastYearExchangeCorrected = exchangeFromLastYear?.receiver?.includes('Sist') ? {
-    ...exchangeFromLastYear,
-    receiver: 'Princess Tilly'
-  } : exchangeFromLastYear;
-
-  exchangeCache[receiverType][giverName] = lastYearExchangeCorrected;
-
-  return lastYearExchangeCorrected;
+  for (const giver of givers) {
+    const exchangeFromLastYear = getExchangeDataForGiver(giver, exchangeDataFromPreviousYear);
+    if (!remainingRecipients.length) {
+      exchanges.push({ giver, receiver: NO_RECIPIENT, socialDistance: 0, exchangeFromLastYear, giver_id: findNode(familyTree, giver).ID });
+      continue;
+    }
+    const receiver = remainingRecipients.find(candidate => isAcceptableMatch(giver, candidate, draw));
+    if (!receiver) {
+      return null;
+    }
+    exchanges.push({
+      giver,
+      receiver,
+      socialDistance: getSocialDistance(familyTree, giver, receiver),
+      exchangeFromLastYear,
+      giver_id: findNode(familyTree, giver).ID,
+      receiver_id: findNode(familyTree, receiver).ID
+    });
+    remainingRecipients = remainingRecipients.filter(recipient => recipient !== receiver);
+  }
+  return exchanges;
 }
-
-const missingRecipientsThatWeFound = [];
 
 /**
  * Generates possible kris kringle matches adhering to the following business rules:
@@ -625,206 +627,29 @@ const missingRecipientsThatWeFound = [];
  * 3. No recursive gift giving allowed
  * 4. Financial situation should be respected so that young adults don't have to buy too many gifts
  * 5. Any left over people should be assigned to a leftover pool
- * @param  {Object} familyTree  A compiled family tree
- * @param  {string} typeGiver  e.g. young adult/kid/adult
- * @param  {string} typeReceiver  e.g. young adult/kid/adult
- * @param  {Array<{giver: string, receiver: string}>} exchangeDataFromPreviousYear  Matches from previous year
- * @return {Array<{giver: string, receiver: string}>}  Best guess at matches
+ * Starts strict about family distance and relaxes it until a draw fits.
+ * @return {Array<{giver: string, receiver: string}>}  Best guess at matches, or [] if none fit
  */
-function generateMatches(
-  familyTree,
-  typeGiver,
-  typeReceiver,
-  exchangeDataFromPreviousYear,
-  attempts = 0,
-  minDistanceThreshold = null
-) {
-  if (minDistanceThreshold === null) {
-    debugger;
-  }
-  if (attempts > 25) {
-    console.log('REDUCING MIN_DISTANCE', minDistanceThreshold);
-
-    if (minDistanceThreshold > 0) {
-      return generateMatches(
-        familyTree,
-        typeGiver,
-        typeReceiver,
-        exchangeDataFromPreviousYear,
-        0,
-        minDistanceThreshold - 1
-      );
-    }
-
-    console.log('Gave up - still no good results after 50', minDistanceThreshold);
-    return [];
-  }
-  const exchanges = [];
-
-  const REMOVED_PARTICIPANTS = ['Seneschal Lea', 'Seneschal Liz']
-
-  let possibleRecipients = shuffleArray(
-    getAllParticipatingPeopleInTree(familyTree, typeReceiver)
-  );
-  const allPossibleRecipients = possibleRecipients.slice(0);
-
-  let possibleGivers = shuffleArray(
-    getAllParticipatingPeopleInTree(familyTree, typeGiver)
-  );
-  let possibleRecipientsForThisGiver = possibleRecipients.slice(0);
-  let currentGiver = possibleGivers[0];
-  let failureReasonsForThisGiver = [];
-  
-  try {
-    while (possibleGivers.length > 0 && possibleRecipientsForThisGiver.length > 0) {
-      possibleRecipientsForThisGiver.forEach((possibleRecipient, index) => {
-
-        if (possibleRecipient === currentGiver) {
-          if (possibleRecipientsForThisGiver.length > 1) {
-            return;
-          }
-          throw new Error("Can only give to self - bad combo - start again");
-        }
-        const distance = getSocialDistance(
-          familyTree,
-          currentGiver,
-          possibleRecipient
-        );
-        const personWhoIsBuyingForGiver = getExchangeForReceiver(
-          exchanges,
-          currentGiver
-        );
-        const recursiveGiving =
-          personWhoIsBuyingForGiver &&
-          personWhoIsBuyingForGiver.giver === possibleRecipient;
-
-        const exchangeFromLastYear = getExchangeDataForGiver(currentGiver, typeReceiver, exchangeDataFromPreviousYear);
-
-        const recipientFromLastYear = exchangeFromLastYear && allPossibleRecipients.find(recipient => {
-          return areNamesSimilar(recipient, exchangeFromLastYear.receiver);
-        });
-
-        const isKnownMissingRecipient = exchangeFromLastYear && (exchangeFromLastYear.receiver === NO_RECIPIENT || REMOVED_PARTICIPANTS.find((removedParticipant) => {
-          return exchangeFromLastYear.receiver.includes(removedParticipant)
-        }));
-
-        if (exchangeFromLastYear && !recipientFromLastYear && !isKnownMissingRecipient && exchangeFromLastYear?.receiver !== NO_RECIPIENT && missingRecipientsThatWeFound.includes(exchangeFromLastYear.receiver) === false) {
-          console.log('Uh oh 603 - gave to someone last year', exchangeFromLastYear.receiver, allPossibleRecipients);
-          missingRecipientsThatWeFound.push(exchangeFromLastYear.receiver);
-          debugger;
-        }
-
-        const distanceFromLastRecipient = typeReceiver === 'kid' || isKnownMissingRecipient ? 99999 : getSocialDistance(
-          familyTree,
-          recipientFromLastYear,
-          possibleRecipient
-        );
-
-        const boughtForSamePersonLastYear =
-          exchangeFromLastYear &&
-          areNamesSimilar(exchangeFromLastYear.receiver, possibleRecipient);
-
-        if (
-          distance > minDistanceThreshold &&
-          // try to choose someone way different compared to last year
-          // this doesn't work for old guard because they're too closely related
-          (typeReceiver === 'old guard' || distanceFromLastRecipient > (minDistanceThreshold - 5)) &&
-          !recursiveGiving &&
-          !boughtForSamePersonLastYear
-        ) {
-          exchanges.push({
-            giver: currentGiver,
-            receiver: possibleRecipient,
-            socialDistance: distance,
-            exchangeFromLastYear: exchangeFromLastYear,
-            giver_id: findNode(familyTree, currentGiver).ID,
-            receiver_id: findNode(familyTree, possibleRecipient).ID
-          });
-          const indexOfReceiver = possibleRecipients.indexOf(possibleRecipient);
-          possibleRecipients.splice(indexOfReceiver, 1);
-          const indexOfGiver = possibleGivers.indexOf(currentGiver);
-          possibleGivers.splice(indexOfGiver, 1);
-
-          if (possibleGivers.length > 0) {
-            currentGiver = possibleGivers[0];
-            possibleRecipientsForThisGiver = possibleRecipients.slice(0);
-          }
-        } else {
-          if (distance < minDistanceThreshold) {
-            failureReasonsForThisGiver.push({
-              possibleRecipient,
-              reason: 'distance too close',
-              distance,
-              minDistanceThreshold
-            });
-          } else if (boughtForSamePersonLastYear) {
-            failureReasonsForThisGiver.push({
-              possibleRecipient,
-              reason: 'bought for same person',
-              exchangeFromLastYear
-            })
-          } else if (recursiveGiving) {
-            failureReasonsForThisGiver.push({
-              possibleRecipient,
-              reason: 'recursive giving'
-            })
-          }
-          // recipient is too close to giver. Take them off the list of possibilities.
-          const indexOfReceiver = possibleRecipientsForThisGiver.indexOf(
-            possibleRecipient
-          );
-          possibleRecipientsForThisGiver.splice(indexOfReceiver, 1);
-        }
-      });
-
-      if (!possibleRecipientsForThisGiver.length && possibleRecipients.length) {
-        // console.log('no possible recipients for', currentGiver, JSON.stringify(failureReasonsForThisGiver));
-        throw new Error("Bad result. Try again");
+function generateMatches(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear) {
+  for (let minDistance = STARTING_MIN_DISTANCE[typeReceiver]; minDistance >= LOWEST_MIN_DISTANCE; minDistance--) {
+    for (let attempt = 0; attempt < ATTEMPTS_PER_MIN_DISTANCE; attempt++) {
+      const exchanges = attemptDraw(familyTree, typeGiver, typeReceiver, exchangeDataFromPreviousYear, minDistance);
+      if (exchanges) {
+        return exchanges;
       }
     }
-
-    if (possibleGivers.length > 0 && possibleRecipients.length === 0) {
-      possibleGivers.forEach((giver) => {
-        const exchangeFromLastYear = getExchangeDataForGiver(giver, typeReceiver, exchangeDataFromPreviousYear);
-
-        exchanges.push({
-          giver,
-          receiver: NO_RECIPIENT,
-          socialDistance: -1,
-          exchangeFromLastYear: exchangeFromLastYear
-        });
-      });
-    }
-  } catch (e) {
-    if (typeReceiver === 'old guard') {
-      // debugger
-    }
-    if (!(e.message.includes('Invalid') || e.message.includes('Bad result') || e.message.includes('bad combo'))) {
-      console.error(e);
-      debugger
-    }
-    // invalid combination - start again
-    return generateMatches(
-      familyTree,
-      typeGiver,
-      typeReceiver,
-      exchangeDataFromPreviousYear,
-      attempts + 1,
-      minDistanceThreshold
-    );
   }
-
-  return exchanges;
+  return [];
 }
 
 const facade = {
+  NO_RECIPIENT,
+  FAMILY_ROOT,
   run,
-  dfs,
-  bfs,
-  treeDepth,
   getSocialDistance,
-  getDepthOfPerson,
-  isParentOf,
+  getConnection,
+  cleanName,
+  areNamesSimilar,
   compileTree,
   addChildToNode,
   findNode,
