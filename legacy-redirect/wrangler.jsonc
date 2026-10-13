@@ -1,0 +1,8 @@
+{
+  // Personal account, where the app's original workers.dev URL lives.
+  "name": "kris-kringle",
+  "account_id": "62856630ff5a2216b88e6d73c4f4cfd0",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true
+}
