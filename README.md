@@ -41,6 +41,18 @@ npm run db:migrate:remote
 npm run deploy
 ```
 
+## Backups
+
+Keep copies of the database off Cloudflare. `npm run db:backup` exports production D1 to a dated, gzipped SQL dump in `~/Backups/kris-kringle` (override with `KRIS_KRINGLE_BACKUP_DIR`) and checks it restores into SQLite. Copy the dump somewhere off this machine too (e.g. Google Drive). Take one before each December draw and after editing data.
+
+For mistakes made in the last 30 days, D1 Time Travel can roll the live database back in place: `npx wrangler d1 time-travel restore kris-kringle --timestamp=<ISO time>`. For anything older, or if the database itself is gone, restore a dump into a new, empty database (the dump includes the schema) and point `database_id` in `wrangler.jsonc` at it:
+
+```bash
+npx wrangler d1 create kris-kringle
+gunzip -k ~/Backups/kris-kringle/<dump>.sql.gz
+npx wrangler d1 execute kris-kringle --remote --file ~/Backups/kris-kringle/<dump>.sql
+```
+
 ## Importing history
 
 `scripts/build-seed-sql.mjs` converts the legacy Heroku Postgres backup (plus any extra history as JSON) into SQL for D1. Keep its inputs and output in `data/`, which is gitignored because account IDs grant access.
